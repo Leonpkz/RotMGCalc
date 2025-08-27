@@ -1,5 +1,11 @@
 # RotMGCalc
 
+# TBC / NOTES FOR SELF
+
+https://medium.com/chingu/an-introduction-to-environment-variables-and-how-to-use-them-f602f66d15fa
+https://www.reddit.com/r/django/comments/20khkz/settingspy_on_github/
+https://docs.djangoproject.com/en/5.2/intro/tutorial01/
+
 ## Overview
 
 This project is to be the "end all be all" for RotMG DPS calculators.
