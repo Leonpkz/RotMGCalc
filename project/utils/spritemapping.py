@@ -1,4 +1,6 @@
 import json
+from collections import defaultdict
+
 import flatbuffers
 import AnimatedSpriteSheet, SpriteSheet, SpriteSheetRoot, Sprite, Position, Color
 
@@ -25,15 +27,36 @@ def sprite_to_dict(sprite):
 
 	# list comprehension on position and color values decreased file size by 20MB
 	return {
-		"name": sprite.Name().decode('utf-8'),
-		"index": sprite.Index(),
-		"atlasId": sprite.AtlasId(),
 		"position": [getattr(pos, attr)() for attr in ['X', 'Y', 'W', 'H']],
 		"mask_position": [getattr(mask_pos, attr)() for attr in ['X', 'Y', 'W', 'H']],
 		"color": [getattr(color, attr)() for attr in ['R', 'G', 'B', 'A']],
 		"transparent": sprite.IsTransparent()
 	}
 
+
+def build_spritesheet_json(root):
+	"""
+	Build a compact JSON grouped by sprite name for each SpriteSheet
+	Uses comprehensions but keeps the rest of your code intact.
+	"""
+	return [
+		{
+			"name": sheet.Name().decode('utf-8'),
+			"atlasId": sheet.AtlasId(),
+			"sprites": [
+				{
+					"name": sprite_name,
+					"frames": [
+						sprite_to_dict(sheet.Sprites(j))
+						for j in range(sheet.SpritesLength())
+						if sheet.Sprites(j).Name().decode('utf-8') == sprite_name
+					]
+				}
+				for sprite_name in {sheet.Sprites(j).Name().decode('utf-8') for j in range(sheet.SpritesLength())}
+			]
+		}
+		for sheet in (root.Sprites(i) for i in range(root.SpritesLength()))
+	]
 
 def load_spritesheet(file_path):
 	with open(file_path, "rb") as f:
@@ -48,24 +71,20 @@ if __name__ == "__main__":
 	root = load_spritesheet(filepath)
 
 	# Return dictionary for all spritesheets
-	root_dict = dict(spritesheets=[
-		{
-			"name": (sheet := root.Sprites(i)).Name().decode('utf-8'),
-			"atlasId": sheet.AtlasId(),
-			"sprites": [sprite_to_dict(sheet.Sprites(j)) for j in range(sheet.SpritesLength())]
-		}
-		for i in range(root.SpritesLength())
-	], animated_sprites=[
-		{
-			"name": (anim := root.AnimatedSprites(i)).Name().decode('utf-8'),
-			"index": anim.Index(),
-			"set": anim.Set(),
-			"direction": anim.Direction(),
-			"action": anim.Action(),
-			"sprite": sprite_to_dict(anim.Sprite())
-		}
-		for i in range(root.AnimatedSpritesLength())
-	])
+	root_dict = {
+		"spritesheets": build_spritesheet_json(root),
+		"animated_sprites": [
+			{
+				"name": (anim := root.AnimatedSprites(i)).Name().decode('utf-8'),
+				"index": anim.Index(),
+				"set": anim.Set(),
+				"direction": anim.Direction(),
+				"action": anim.Action(),
+				"sprite": sprite_to_dict(anim.Sprite())
+			}
+			for i in range(root.AnimatedSpritesLength())
+		]
+	}
 
 with open("spritesheet.json", "w") as f:
 	json.dump(root_dict, f, indent=2)
