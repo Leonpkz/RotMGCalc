@@ -2,6 +2,8 @@
   <dictionary name="project">
     <words>
       <w>localfiles</w>
+      <w>rootsheet</w>
+      <w>spritesheetf</w>
     </words>
   </dictionary>
 </component>
