@@ -4,6 +4,7 @@ from collections import defaultdict
 import flatbuffers
 import AnimatedSpriteSheet, SpriteSheet, SpriteSheetRoot, Sprite, Position, Color
 
+# todo - set as environment variable
 filepath = r'C:\Code\exalt-extractor-main\output\xml\spritesheetf.bin'
 
 '''
@@ -19,7 +20,7 @@ This will generate the necessary python scripts used to map the spritesheet to a
 changes in future you won't be able to decode the spritesheef file as the exact "table" and "struct" needs to be known. 
 '''
 
-# Read binary file for spritesheet and return a dictionary containing the sprite data
+# read binary file for spritesheet and return a dictionary containing the sprite data
 def sprite_to_dict(sprite):
 	pos = sprite.Position()
 	mask_pos = sprite.MaskPosition()
@@ -35,10 +36,8 @@ def sprite_to_dict(sprite):
 
 
 def build_spritesheet_json(root):
-	"""
-	Build a compact JSON grouped by sprite name for each SpriteSheet
-	Uses comprehensions but keeps the rest of your code intact.
-	"""
+
+	# Build a compact JSON grouped by sprite name for each spritesheet, to allow for easier lookup
 	return [
 		{
 			"name": sheet.Name().decode('utf-8'),

@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 
+# todo - set as environment variable
 players = r'C:\Code\RotMGCalc\localfiles\xml\Players.xml'
 
 class Character:
