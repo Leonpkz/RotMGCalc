@@ -2,9 +2,6 @@
 
 # TBC / NOTES FOR SELF
 
-https://www.reddit.com/r/django/comments/20khkz/settingspy_on_github/
-https://docs.djangoproject.com/en/5.2/intro/tutorial01/
-
 ## Overview
 
 This project is to be the "end all be all" for RotMG DPS calculators.
