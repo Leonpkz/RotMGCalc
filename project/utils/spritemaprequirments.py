@@ -1,5 +1,5 @@
-import xml.etree.ElementTree as ET
 from collections import Counter
+import xml.etree.ElementTree as ET
 
 '''
 This script is meant to read the XML files extracted from the game so that you are able to identify which
@@ -12,16 +12,18 @@ wish to include things like dungeon sprites or bullet sprites.
 # todo - set as environment variable
 inputxml = r'C:\Code\RotMGCalc\localfiles\xml\equip.xml'
 
-# Load XML file (replace 'input.xml' with your XML filename)
-tree = ET.parse("input.xml")
-root = tree.getroot()
+def spriteSheetCounter(input_xml):
 
-# Find all <File> tags and collect their text
-files = [f.text for f in root.findall(".//File") if f.text]
+    tree = ET.parse(input_xml)
+    root = tree.getroot()
 
-# Count occurrences
-counts = Counter(files)
+    # find file tag
+    file_tag = [f.text for f in root.findall(".//File") if f.text]
 
-# Print results
-for i, (fname, count) in enumerate(counts.items(), start=1):
-    print(f"{fname} = {count}")
+    counts = Counter(file_tag)
+
+    for i, (tag_name, count) in enumerate(counts.items(), start=1):
+        print(f"{tag_name} = {count}")
+
+if __name__ == '__main__':
+    spriteSheetCounter(inputxml)
