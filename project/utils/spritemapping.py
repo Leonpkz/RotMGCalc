@@ -21,7 +21,7 @@ changes in future you won't be able to decode the spritesheef file as the exact 
 '''
 
 # read binary file for spritesheet and return a dictionary containing the sprite data
-def sprite_to_dict(sprite):
+def spriteToDict(sprite):
 	pos = sprite.Position()
 	mask_pos = sprite.MaskPosition()
 	color = sprite.Color()
@@ -35,9 +35,9 @@ def sprite_to_dict(sprite):
 	}
 
 
-def build_spritesheet_json(root):
+def buildSpritesheetJson(root):
 
-	# Build a compact JSON grouped by sprite name for each spritesheet, to allow for easier lookup
+	# TODO - refactor for readability
 	return [
 		{
 			"name": sheet.Name().decode('utf-8'),
@@ -46,7 +46,7 @@ def build_spritesheet_json(root):
 				{
 					"name": sprite_name,
 					"frames": [
-						sprite_to_dict(sheet.Sprites(j))
+						spriteToDict(sheet.Sprites(j))
 						for j in range(sheet.SpritesLength())
 						if sheet.Sprites(j).Name().decode('utf-8') == sprite_name
 					]
@@ -57,7 +57,7 @@ def build_spritesheet_json(root):
 		for sheet in (root.Sprites(i) for i in range(root.SpritesLength()))
 	]
 
-def load_spritesheet(file_path):
+def loadSpritesheet(file_path):
 	with open(file_path, "rb") as f:
 		data = f.read()
 
@@ -67,11 +67,15 @@ def load_spritesheet(file_path):
 
 
 if __name__ == "__main__":
-	root = load_spritesheet(filepath)
+	root = loadSpritesheet(filepath)
 
-	# Return dictionary for all spritesheets
+	''' TODO - refactor this
+		it uses the functions which we retrieve from the schema, these functions are called to then get the desired
+		information and then save it into a JSON format
+	'''
+	# returns a dictionary with all necessary values to map each sprite on the spritesheet
 	root_dict = {
-		"spritesheets": build_spritesheet_json(root),
+		"spritesheets": buildSpritesheetJson(root),
 		"animated_sprites": [
 			{
 				"name": (anim := root.AnimatedSprites(i)).Name().decode('utf-8'),
@@ -79,7 +83,7 @@ if __name__ == "__main__":
 				"set": anim.Set(),
 				"direction": anim.Direction(),
 				"action": anim.Action(),
-				"sprite": sprite_to_dict(anim.Sprite())
+				"sprite": spriteToDict(anim.Sprite())
 			}
 			for i in range(root.AnimatedSpritesLength())
 		]
