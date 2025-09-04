@@ -1,3 +1,4 @@
+import json
 from collections import Counter
 import xml.etree.ElementTree as ET
 
@@ -12,18 +13,25 @@ wish to include things like dungeon sprites or bullet sprites.
 # todo - set as environment variable
 inputxml = r'C:\Code\RotMGCalc\localfiles\xml\equip.xml'
 
+
 def spriteSheetCounter(input_xml):
+	tree = ET.parse(input_xml)
+	root = tree.getroot()
 
-    tree = ET.parse(input_xml)
-    root = tree.getroot()
+	# find file tag
+	file_tag = [f.text for f in root.findall(".//File") if f.text]
 
-    # find file tag
-    file_tag = [f.text for f in root.findall(".//File") if f.text]
+	counts = Counter(file_tag)
+	tagSet = set()
 
-    counts = Counter(file_tag)
+	for i, (tag_name, count) in enumerate(counts.items(), start=1):
+		# print(f"{tag_name} = {count}")
+		tagSet.add(tag_name)
 
-    for i, (tag_name, count) in enumerate(counts.items(), start=1):
-        print(f"{tag_name} = {count}")
+	tagSet = list(tagSet)
+
+	json.dump(tagSet, open("spriteMapRequirements.json", "w"), indent=2)
+
 
 if __name__ == '__main__':
-    spriteSheetCounter(inputxml)
+	spriteSheetCounter(inputxml)
