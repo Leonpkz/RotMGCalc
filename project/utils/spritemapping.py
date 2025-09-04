@@ -47,18 +47,21 @@ def buildSpritesheetJson(spriteSheet, allowedSheetNames=None):
 		if allowedSheetNames is not None and sheetName not in allowedSheetNames:
 			continue
 
-		animatedSprite = defaultdict(list)
+		spriteInfo = defaultdict(list)
 		for j in range(sheet.SpritesLength()):
 			sprite = sheet.Sprites(j)
+			# specify what sprite width and height you want to export
+			if not widthHeightParsing(sprite, requiredWidthHeight=(8.0, 8.0)):
+				continue
 			currentSprite = sprite.Name().decode("utf-8")
-			animatedSprite[currentSprite].append(spriteToDict(sprite))
+			spriteInfo[currentSprite].append(spriteToDict(sprite))
 
 		result.append({
 			"name": sheetName,
 			"atlasId": sheet.AtlasId(),
 			"sprites": [
 				{"name": name, "spriteLocation": frames}
-				for name, frames in animatedSprite.items()
+				for name, frames in spriteInfo.items()
 			]
 		})
 
@@ -87,6 +90,15 @@ def loadSpriteMapRequirements(spriteRequirements):
 	except:
 		print("No spriteMapRequirements.json found, exporting all sprites")
 
+''' 
+this function allows you to parse the sprites by their width and height, which allows us to specifically export the 
+sprites for gear in the game.
+'''
+def widthHeightParsing(sprite, requiredWidthHeight=(None, None)):
+	position = sprite.Position()
+	return position.W() == requiredWidthHeight[0] and position.H() == requiredWidthHeight[1]
+
+
 
 if __name__ == "__main__":
 
@@ -107,6 +119,8 @@ if __name__ == "__main__":
 				"sprite": spriteToDict(anim.Sprite())
 			}
 			for i in range(spriteSheet.AnimatedSpritesLength())
+			# specify what sprite width and height you want to export
+			if widthHeightParsing(spriteSheet.AnimatedSprites(i).Sprite(), requiredWidthHeight=(8.0, 8.0))
 		]
 	}
 
