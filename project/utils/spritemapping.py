@@ -10,13 +10,13 @@ SPRITEMAPREQUIREMENTS = "spriteMapRequirements.json"
 This module considers the use of flatc (https://flatbuffers.dev/) to decode the binary file
 
 This is done decoding the spritesheetf binary from the unity game files - if you are using the exalt extractor tool the 
-file will be named spritesheetf.xml you can rename the file, and then using the sprites.fbs file provided you can 
-generate the binary file using the following command:
+file will be named spritesheetf.xml you can rename it to spritesheet.bin, and then using the sprites.fbs file provided 
+you can decode the binary using the following command:
 
           ./flatc.exe --python sprites.fbs
 
-This will generate the necessary python scripts used to map the spritesheet to a JSON, if the schema (sprites.fbs) 
-changes in future you won't be able to decode the spritesheef file as the exact "table" and "struct" needs to be known. 
+This will generate the necessary python scripts used to map the spritesheet to a JSON. If the schema (sprites.fbs) 
+changes in future you won't be able to decode the spritesheef file as the exact "table"s and "struct"s need to be known. 
 '''
 
 
