@@ -35,12 +35,12 @@ def spriteToDict(sprite):
 	}
 
 
-def buildSpritesheetJson(root):
+def buildSpritesheetJson(spriteSheet):
 
 	# TODO - refactor for readability
 	return [
 		{
-			"name": sheet.Name().decode('utf-8'),
+			"name": sheet.Name(),
 			"atlasId": sheet.AtlasId(),
 			"sprites": [
 				{
@@ -48,13 +48,13 @@ def buildSpritesheetJson(root):
 					"frames": [
 						spriteToDict(sheet.Sprites(j))
 						for j in range(sheet.SpritesLength())
-						if sheet.Sprites(j).Name().decode('utf-8') == sprite_name
+						if sheet.Sprites(j).Name() == sprite_name
 					]
 				}
-				for sprite_name in {sheet.Sprites(j).Name().decode('utf-8') for j in range(sheet.SpritesLength())}
+				for sprite_name in {sheet.Sprites(j).Name() for j in range(sheet.SpritesLength())}
 			]
 		}
-		for sheet in (root.Sprites(i) for i in range(root.SpritesLength()))
+		for sheet in (spriteSheet.Sprites(i) for i in range(spriteSheet.SpritesLength()))
 	]
 
 def loadSpritesheet(file_path):
@@ -67,27 +67,27 @@ def loadSpritesheet(file_path):
 
 
 if __name__ == "__main__":
-	root = loadSpritesheet(filepath)
+	spriteSheet = loadSpritesheet(filepath)
 
 	''' TODO - refactor this
 		it uses the functions which we retrieve from the schema, these functions are called to then get the desired
 		information and then save it into a JSON format
 	'''
 	# returns a dictionary with all necessary values to map each sprite on the spritesheet
-	root_dict = {
-		"spritesheets": buildSpritesheetJson(root),
+	spriteSheetDict = {
+		"spritesheets": buildSpritesheetJson(spriteSheet),
 		"animated_sprites": [
 			{
-				"name": (anim := root.AnimatedSprites(i)).Name().decode('utf-8'),
+				"name": (anim := spriteSheet.AnimatedSprites(i)).Name(),
 				"index": anim.Index(),
 				"set": anim.Set(),
 				"direction": anim.Direction(),
 				"action": anim.Action(),
 				"sprite": spriteToDict(anim.Sprite())
 			}
-			for i in range(root.AnimatedSpritesLength())
+			for i in range(spriteSheet.AnimatedSpritesLength())
 		]
 	}
 
 with open("spritesheet.json", "w") as f:
-	json.dump(root_dict, f, indent=2)
+	json.dump(spriteSheetDict, f, indent=2)
