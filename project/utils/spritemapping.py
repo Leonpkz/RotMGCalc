@@ -1,14 +1,10 @@
 import json
 from collections import defaultdict
-
-import flatbuffers
-from fontTools.misc.cython import returns
-
-import AnimatedSpriteSheet, SpriteSheet, SpriteSheetRoot, Sprite, Position, Color
+import SpriteSheetRoot
 
 # todo - set as environment variable
-filepath = r'C:\Code\RotMGCalc\localfiles\xml\spritesheetf.bin'
-spriteMapRequirements = "spriteMapRequirements.json"
+FILEPATH = r'C:\Code\RotMGCalc\localfiles\xml\spritesheetf.bin'
+SPRITEMAPREQUIREMENTS = "spriteMapRequirements.json"
 
 '''
 This module considers the use of flatc (https://flatbuffers.dev/) to decode the binary file
@@ -34,14 +30,14 @@ def spriteToDict(sprite):
 	# dict comprehension on position and color values, assigning them to their respective tag for JSON
 	return {
 		"position": [getattr(position, attr)() for attr in ['X', 'Y', 'W', 'H']],
-		"mask_position": [getattr(maskPositon, attr)() for attr in ['X', 'Y', 'W', 'H']],
+		"maskPositon": [getattr(maskPositon, attr)() for attr in ['X', 'Y', 'W', 'H']],
 		"color": [getattr(color, attr)() for attr in ['R', 'G', 'B', 'A']],
 		"transparent": sprite.IsTransparent()
 	}
 
 
 def buildSpritesheetJson(spriteSheet, allowedSheetNames=None):
-	#
+	# builds the json with all the required sprites
 	result = []
 	for i in range(spriteSheet.SpritesLength()):
 		sheet = spriteSheet.Sprites(i)
@@ -59,7 +55,7 @@ def buildSpritesheetJson(spriteSheet, allowedSheetNames=None):
 			"name": sheetName,
 			"atlasId": sheet.AtlasId(),
 			"sprites": [
-				{"name": name, "frames": frames}
+				{"name": name, "spriteLocation": frames}
 				for name, frames in animatedSprite.items()
 			]
 		})
@@ -67,18 +63,21 @@ def buildSpritesheetJson(spriteSheet, allowedSheetNames=None):
 	return result
 
 
-def loadSpritesheet(file_path):
-	with open(file_path, "rb") as f:
-		data = f.read()
-
-	buf = bytearray(data)
-	rootsheet = SpriteSheetRoot.SpriteSheetRoot.GetRootAsSpriteSheetRoot(buf, 0)
-	return rootsheet
-
-
-def loadSpriteMapRequirements(file_path):
+def loadSpritesheet(spriteFilePath):
 	try:
-		with open(spriteMapRequirements) as f:
+		with open(spriteFilePath, "rb") as f:
+			data = f.read()
+
+		buf = bytearray(data)
+		rootsheet = SpriteSheetRoot.SpriteSheetRoot.GetRootAsSpriteSheetRoot(buf, 0)
+		return rootsheet
+	except:
+		print(f"unable to load spritesheet or failure to read data, please validate ")
+
+
+def loadSpriteMapRequirements(spriteRequirements):
+	try:
+		with open(spriteRequirements) as f:
 			spriteMapReqs = json.load(f)
 			if spriteMapReqs is not None:
 				return set(spriteMapReqs)
@@ -87,18 +86,14 @@ def loadSpriteMapRequirements(file_path):
 
 
 if __name__ == "__main__":
-	spriteSheet = loadSpritesheet(filepath)
 
-	''' TODO - refactor this
-		it uses the functions which we retrieve from the schema, these functions are called to then get the desired
-		information and then save it into a JSON format
-	'''
+	spriteSheet = loadSpritesheet(FILEPATH)
 	# load optional specified spritesheets
-	spriteMapSet = loadSpriteMapRequirements(spriteMapRequirements)
+	spriteMapSet = loadSpriteMapRequirements(SPRITEMAPREQUIREMENTS)
 
 	# returns a dictionary with all necessary values to map each sprite on the spritesheet
 	spriteSheetDict = {
-		"spritesheets": buildSpritesheetJson(spriteSheet, spriteMapRequirements),
+		"spritesheets": buildSpritesheetJson(spriteSheet, spriteMapSet),
 		"animated_sprites": [
 			{
 				"name": (anim := spriteSheet.AnimatedSprites(i)).Name().decode("utf-8"),
