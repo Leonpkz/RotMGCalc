@@ -1,5 +1,7 @@
 import json
 from collections import defaultdict
+from sys import exception
+
 import SpriteSheetRoot
 
 # todo - set as environment variable
@@ -68,11 +70,12 @@ def loadSpritesheet(spriteFilePath):
 		with open(spriteFilePath, "rb") as f:
 			data = f.read()
 
-		buf = bytearray(data)
-		rootsheet = SpriteSheetRoot.SpriteSheetRoot.GetRootAsSpriteSheetRoot(buf, 0)
-		return rootsheet
-	except:
-		print(f"unable to load spritesheet or failure to read data, please validate ")
+		buffer = bytearray(data)
+		spriteSheetRoot = SpriteSheetRoot.SpriteSheetRoot.GetRootAsSpriteSheetRoot(buffer, 0)
+		return spriteSheetRoot
+	except exception as error:
+		print(f"Unable to find file path or failure to read file data, please validate file path and or the decoded "
+		      f"Schema files - see exception - {error}")
 
 
 def loadSpriteMapRequirements(spriteRequirements):
