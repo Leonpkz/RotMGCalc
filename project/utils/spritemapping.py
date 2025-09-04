@@ -40,7 +40,7 @@ def buildSpritesheetJson(spriteSheet):
 	# TODO - refactor for readability
 	return [
 		{
-			"name": sheet.Name(),
+			"name": sheet.Name().decode("utf-8"),
 			"atlasId": sheet.AtlasId(),
 			"sprites": [
 				{
@@ -48,10 +48,10 @@ def buildSpritesheetJson(spriteSheet):
 					"frames": [
 						spriteToDict(sheet.Sprites(j))
 						for j in range(sheet.SpritesLength())
-						if sheet.Sprites(j).Name() == sprite_name
+						if sheet.Sprites(j).Name().decode("utf-8") == sprite_name
 					]
 				}
-				for sprite_name in {sheet.Sprites(j).Name() for j in range(sheet.SpritesLength())}
+				for sprite_name in {sheet.Sprites(j).Name().decode("utf-8") for j in range(sheet.SpritesLength())}
 			]
 		}
 		for sheet in (spriteSheet.Sprites(i) for i in range(spriteSheet.SpritesLength()))
@@ -78,7 +78,7 @@ if __name__ == "__main__":
 		"spritesheets": buildSpritesheetJson(spriteSheet),
 		"animated_sprites": [
 			{
-				"name": (anim := spriteSheet.AnimatedSprites(i)).Name(),
+				"name": (anim := spriteSheet.AnimatedSprites(i)).Name().decode("utf-8"),
 				"index": anim.Index(),
 				"set": anim.Set(),
 				"direction": anim.Direction(),
