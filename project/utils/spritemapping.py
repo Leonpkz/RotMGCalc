@@ -1,12 +1,14 @@
 import json
 from collections import defaultdict
 from sys import exception
+import os
 
 import SpriteSheetRoot
 
-# todo - set as environment variable
-FILEPATH = r'C:\Code\RotMGCalc\localfiles\xml\spritesheetf.bin'
-SPRITEMAPREQUIREMENTS = "spriteMapRequirements.json"
+# spritesheetf.bin file extracted from game file
+SPRITE_SHEET_BIN = os.environ.get('SPRITE_SHEET_BIN')
+# spriteMapRequirements.json file
+SPRITE_MAP_REQUIREMENTS = os.environ.get('SPRITE_MAP_REQUIREMENTS')
 
 '''
 This module considers the use of flatc (https://flatbuffers.dev/) to decode the binary file
@@ -102,9 +104,9 @@ def widthHeightParsing(sprite, requiredWidthHeight=(None, None)):
 
 if __name__ == "__main__":
 
-	spriteSheet = loadSpritesheet(FILEPATH)
+	spriteSheet = loadSpritesheet(SPRITE_SHEET_BIN)
 	# load optional specified spritesheets
-	spriteMapSet = loadSpriteMapRequirements(SPRITEMAPREQUIREMENTS)
+	spriteMapSet = loadSpriteMapRequirements(SPRITE_MAP_REQUIREMENTS)
 
 	# returns a dictionary with all necessary values to map each sprite on the spritesheet
 	spriteSheetDict = {

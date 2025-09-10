@@ -1,9 +1,9 @@
 import json
+import os
 
-# todo - set as environment variable
-spriteSheetJson = 'spritesheet.json'
+SPRITE_SHEET_JSON = os.environ.get('SPRITE_SHEET_JSON')
 
-with open(spriteSheetJson) as f:
+with open(SPRITE_SHEET_JSON) as f:
     sprites = json.load(f)
 
 for row in sprites:
