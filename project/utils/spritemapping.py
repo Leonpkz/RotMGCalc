@@ -8,7 +8,7 @@ import SpriteSheetRoot
 # spritesheetf.bin file extracted from game file
 SPRITE_SHEET_BIN = os.environ.get('SPRITE_SHEET_BIN')
 # spriteMapRequirements.json file
-SPRITE_MAP_REQUIREMENTS = os.environ.get('SPRITE_MAP_REQUIREMENTS')
+SPRITE_MAP_REQUIREMENTS = "spriteMapRequirements.json"
 
 '''
 This module considers the use of flatc (https://flatbuffers.dev/) to decode the binary file
@@ -20,7 +20,9 @@ you can decode the binary using the following command:
           ./flatc.exe --python sprites.fbs
 
 This will generate the necessary python scripts used to map the spritesheet to a JSON. If the schema (sprites.fbs) 
-changes in future you won't be able to decode the spritesheef file as the exact "table"s and "struct"s need to be known. 
+changes in future you won't be able to decode the spritesheef file as the exact "table"s and "struct"s need to be known.
+
+# TODO re-organise this as it would make more sense to have the flatbuffer extracted files in their own directory 
 '''
 
 
