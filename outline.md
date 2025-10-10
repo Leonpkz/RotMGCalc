@@ -55,6 +55,7 @@ As a later calculation figure out and display **passive statistics**
 			- On use stat modifications
 			- DPS
 			- Armour piercing
+            - Special case calculations, eg Lethal Strike
 		- Armour
 			- On use stat modifications
 			- Misc. effects
@@ -85,4 +86,4 @@ Raw calculations based on the data from the **Character**.
 		- Armoured
 		- Armour broken
 		- Curse 25%^ (Last calculation?)
-		- Exposed -20 Def (Can go below 0)
+		- Exposed -20 Def (Cant go below 0)

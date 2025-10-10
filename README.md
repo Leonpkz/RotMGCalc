@@ -1,5 +1,10 @@
 # RotMGCalc
 
+# Requirements
+
+- Flatbuffers
+- Up-to-date RotMG install (For game file extraction, considering your own deployment)
+
 # TBC / NOTES FOR SELF
 
 - Crop the sprite sheets, this will allow me to search the sprites as needed

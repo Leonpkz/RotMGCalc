@@ -12,6 +12,7 @@ There would otherwise be far too many redundant spritesheets to store in the JSO
 wish to include things like dungeon sprites or bullet sprites.
 '''
 
+# XML for specific sheet, for example equip.xml
 INPUT_XML = os.environ.get("INPUT_XML")
 
 def spriteSheetCounter(input_xml):
