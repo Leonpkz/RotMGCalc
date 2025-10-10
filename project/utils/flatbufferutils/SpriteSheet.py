@@ -45,7 +45,7 @@ class SpriteSheet(object):
             x = self._tab.Vector(o)
             x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
             x = self._tab.Indirect(x)
-            from Sprite import Sprite
+            from RotMGCalc.project.utils.flatbufferutils.Sprite import Sprite
             obj = Sprite()
             obj.Init(self._tab.Bytes, x)
             return obj

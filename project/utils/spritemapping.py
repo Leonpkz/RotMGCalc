@@ -3,7 +3,7 @@ from collections import defaultdict
 from sys import exception
 import os
 
-import SpriteSheetRoot
+from RotMGCalc.project.utils.flatbufferutils import SpriteSheetRoot
 
 # spritesheetf.bin file extracted from game file
 SPRITE_SHEET_BIN = os.environ.get('SPRITE_SHEET_BIN')
@@ -35,7 +35,7 @@ def spriteToDict(sprite):
 
 	# dict comprehension on position and color values, assigning them to their respective tag for JSON
 	return {
-		"position": [getattr(position, attr)() for attr in ['X', 'Y', 'W', 'H']],
+		"position": [getattr(position, attr)() for attr in ['X', 'Y', 'H', 'W']],
 		"maskPositon": [getattr(maskPositon, attr)() for attr in ['X', 'Y', 'W', 'H']],
 		"color": [getattr(color, attr)() for attr in ['R', 'G', 'B', 'A']],
 		"transparent": sprite.IsTransparent()

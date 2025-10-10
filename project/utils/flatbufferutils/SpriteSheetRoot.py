@@ -56,7 +56,7 @@ class SpriteSheetRoot(object):
             x = self._tab.Vector(o)
             x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
             x = self._tab.Indirect(x)
-            from AnimatedSpriteSheet import AnimatedSpriteSheet
+            from RotMGCalc.project.utils.flatbufferutils.AnimatedSpriteSheet import AnimatedSpriteSheet
             obj = AnimatedSpriteSheet()
             obj.Init(self._tab.Bytes, x)
             return obj

@@ -2,6 +2,14 @@
 
 # TBC / NOTES FOR SELF
 
+- Crop the sprite sheets, this will allow me to search the sprites as needed
+  - https://github.com/X-com/RealmShark/blob/ad8cc2e8cb54fba08e914dcb0d811408d1c858bb/src/main/java/assets/SpriteFlatBuffer.java
+  - https://github.com/X-com/RealmShark/blob/ad8cc2e8cb54fba08e914dcb0d811408d1c858bb/src/main/java/assets/ImageBuffer.java
+- The above will give insight on how to crop these, porting this to python seems like the solution
+- Following this it would be worth a re-factor of what is currently available in my project to cut down on 
+confusion as to what is required and how to acquire this, on top of this the
+re-organisation and creation of directories for better future proofing
+
 ## Overview
 
 This project is to be the "end all be all" for RotMG DPS calculators.
