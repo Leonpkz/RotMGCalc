@@ -128,5 +128,5 @@ if __name__ == "__main__":
 		]
 	}
 
-with open("spritesheet.json", "w") as f:
+with open("../spritesheet.json", "w") as f:
 	json.dump(spriteSheetDict, f, indent=2)

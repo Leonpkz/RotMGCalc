@@ -2,7 +2,7 @@ import json
 import os
 import PIL.Image
 
-# spritesheet extracted from spritemapping.py
+# spritesheet extracted from xspriteMapping.py
 SPRITE_SHEET_JSON = os.environ.get('SPRITE_SHEET_JSON')
 
 with open(SPRITE_SHEET_JSON) as f:
