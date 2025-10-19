@@ -19,17 +19,24 @@ def spriteSheetCounter(input_xml):
 	tree = ET.parse(input_xml)
 	root = tree.getroot()
 
-	# find file tag
-	file_tag = [f.text for f in root.findall(".//File") if f.text]
+	# we only want these sprites, so only the tags with these labels will be exported, thus reducing data
+	labels_required = {"ARMOR", "WEAPON", "RING", "ABILITY"}
+	file_tags = []
 
-	counts = Counter(file_tag)
-	tagSet = set()
+	for obj in root.findall(".//Object"):
+		labels = obj.find("Labels")
+		if labels is None:
+			continue
 
-	for i, (tag_name, count) in enumerate(counts.items(), start=1):
-		# print(f"{tag_name} = {count}")
-		tagSet.add(tag_name)
+		label_list = {lbl.strip().upper() for lbl in labels.text.split(",")}
+		if not (label_list & labels_required):
+			continue
 
-	tagSet = list(tagSet)
+		texture_file = obj.find(".//Texture/File")
+		if texture_file is not None and texture_file.text:
+			file_tags.append(texture_file.text)
+
+	tagSet = sorted(set(file_tags))
 
 	json.dump(tagSet, open("spriteMapRequirements.json", "w"), indent=2)
 

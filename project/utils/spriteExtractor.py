@@ -38,6 +38,6 @@ def extractSprites(json_path, spritesheet_path, output_dir):
 
 extractSprites(
     json_path="spritesheet.json",
-    spritesheet_path=r"C:\Code\RotMGCalc\RotMGCalc\localfiles\spritesheets\mapObjects.png",
+    spritesheet_path=r"C:\Code\RotMGCalc\localfiles\spritesheets\mapObjects.png", # TODO env variable
     output_dir="output_sprites"
 )
