@@ -1,7 +1,7 @@
 import json
-from collections import defaultdict
 from sys import exception
 import os
+from collections import defaultdict
 
 from RotMGCalc.project.utils.flatbufferutils import SpriteSheetRoot
 
@@ -48,28 +48,47 @@ def buildSpritesheetJson(spriteSheet, allowedSheetNames=None):
 	for i in range(spriteSheet.SpritesLength()):
 		sheet = spriteSheet.Sprites(i)
 		sheetName = sheet.Name().decode("utf-8")
+
 		if allowedSheetNames is not None and sheetName not in allowedSheetNames:
 			continue
 
 		spriteInfo = defaultdict(list)
+		spriteIndices = defaultdict(list)
+
+		# this value is just for logging purposes - it does not correspond to the XML or any gamefile value
+		index_counter = 0
+
 		for j in range(sheet.SpritesLength()):
 			sprite = sheet.Sprites(j)
+
+			current_index = index_counter
+			index_counter += 1
+
 			# specify what sprite width and height you want to export
 			if not widthHeightParsing(sprite, requiredWidthHeight=(8.0, 8.0)):
 				continue
+
 			currentSprite = sprite.Name().decode("utf-8")
 			spriteInfo[currentSprite].append(spriteToDict(sprite))
+			spriteIndices[currentSprite].append(current_index)
 
 		result.append({
 			"name": sheetName,
 			"atlasId": sheet.AtlasId(),
 			"sprites": [
-				{"name": name, "spriteLocation": frames}
+				{
+					"name": name,
+					"spriteLocation": [
+						{**frame, "index": idx}
+						for frame, idx in zip(frames, spriteIndices[name])
+					]
+				}
 				for name, frames in spriteInfo.items()
 			]
 		})
 
 	return result
+
 
 
 def loadSpritesheet(spriteFilePath):

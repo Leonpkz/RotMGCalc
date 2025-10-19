@@ -211,3 +211,4 @@ localfiles/
 /project/utils/flatbufferutils/flatc.exe
 /project/utils/spritesheet.json
 /project/utils/spritesheetFull.json
+/project/utils/output_sprites/
