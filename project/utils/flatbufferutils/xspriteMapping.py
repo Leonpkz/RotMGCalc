@@ -2,8 +2,7 @@ import json
 from sys import exception
 import os
 from collections import defaultdict
-
-from RotMGCalc.project.utils.flatbufferutils import SpriteSheetRoot
+import SpriteSheetRoot
 
 # spritesheetf.bin file extracted from game file
 SPRITE_SHEET_BIN = os.environ.get('SPRITE_SHEET_BIN')
