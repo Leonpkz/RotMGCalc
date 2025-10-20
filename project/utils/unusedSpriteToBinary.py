@@ -30,3 +30,30 @@ def loadSkipBinary():
 	returns the binary data as a set, each 32 bytes in size. you can encode your own images which should then yield
 	the same binary data for my encoded data in the file "skiparchive.bin".
 	'''
+	skip_set = set()
+	with open(SKIP_ARCHIVE, "rb") as skipBinaryData:
+		while True:
+			spriteHash = skipBinaryData.read(32)
+			if not spriteHash:
+				break
+			skip_set.add(spriteHash)
+	return skip_set
+
+def saveSkipBinary(skip_set):
+	# saves the set of encoded sprite hashes to the binary file
+	with open(SKIP_ARCHIVE, "wb") as skipBinaryData:
+		for spriteHash in skip_set:
+			skipBinaryData.write(spriteHash)
+
+def updateSkipBinary(ORIGINAL_SPRITES, PARSED_OUTPUT_SPRITES):
+	"""
+	Updates the binary as needed
+
+	:arg	ORIGINAL_SPRITES: Directory of all extracted sprites
+	:arg    PARSED_OUTPUT_SPRITES: Directory of manually parsed sprites
+	"""
+	return None
+
+
+def checkIfSkip(image):
+	return None
