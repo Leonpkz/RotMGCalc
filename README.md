@@ -10,11 +10,16 @@
 - Crop the sprite sheets, this will allow me to search the sprites as needed
   - https://github.com/X-com/RealmShark/blob/ad8cc2e8cb54fba08e914dcb0d811408d1c858bb/src/main/java/assets/SpriteFlatBuffer.java
   - https://github.com/X-com/RealmShark/blob/ad8cc2e8cb54fba08e914dcb0d811408d1c858bb/src/main/java/assets/ImageBuffer.java
-  https://pillow.readthedocs.io/en/stable/reference/Image.html
 - The above will give insight on how to crop these, porting this to python seems like the solution
 - Following this it would be worth a re-factor of what is currently available in my project to cut down on 
 confusion as to what is required and how to acquire this, on top of this the
 re-organisation and creation of directories for better future proofing
+- turning the images to not be used in my project (byproduct of extracting spritesheets from the game)
+into a bytes like object, then storing that in a binary file. see my unusedSpriteToBinary.py for more info
+- assigning the correct data to the images
+  - name change to the corresponding "type=" value on the XML
+  - tool for managing the current and future assignment of these names changes, making future updates seamless 
+  (or just less horrible, as this has to be manually done, to a degree, no matter what)
 
 ## Overview
 
@@ -25,7 +30,7 @@ There are no current up-to-date calculators which check all the below boxes
 - Accurate DPS representation for **all** equipment
 - Exaltation & Enchantment inclusion
 - Ability to save current "calculations" for later use
-- Correct data (in regards to ingame updates)
+- Correct data (in regards to ingame updates) <- You are here (sprite data)
 
 One of the goals is to accurately display the above information (with some nuance in regards to Enchantments which will be explained) and maintaining data validity for the forseeable future whilst being encapsulated in an easy to update open source project.
 
