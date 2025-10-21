@@ -52,7 +52,9 @@ def updateSkipBinary(ORIGINAL_SPRITES, PARSED_OUTPUT_SPRITES):
 	:arg	ORIGINAL_SPRITES: Directory of all extracted sprites
 	:arg    PARSED_OUTPUT_SPRITES: Directory of manually parsed sprites
 	"""
-	return None
+	skipSet = loadSkipBinary()
+
+
 
 
 def checkIfSkip(image):
