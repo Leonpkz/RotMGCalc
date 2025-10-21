@@ -29,30 +29,30 @@ changes in future you won't be able to decode the spritesheef file as the exact 
 def spriteToDict(sprite):
 	# these are the functions from the decoded Schema
 	position = sprite.Position()
-	maskPositon = sprite.MaskPosition()
+	mask_position = sprite.MaskPosition()
 	color = sprite.Color()
 
 	# dict comprehension on position and color values, assigning them to their respective tag for JSON
 	return {
 		"position": [getattr(position, attr)() for attr in ['X', 'Y', 'H', 'W']],
-		"maskPositon": [getattr(maskPositon, attr)() for attr in ['X', 'Y', 'W', 'H']],
+		"mask_position": [getattr(mask_position, attr)() for attr in ['X', 'Y', 'W', 'H']],
 		"color": [getattr(color, attr)() for attr in ['R', 'G', 'B', 'A']],
 		"transparent": sprite.IsTransparent()
 	}
 
 
-def buildSpritesheetJson(spriteSheet, allowedSheetNames=None):
+def buildSpritesheetJson(sprite_sheet, allowed_sheet_names=None):
 	# builds the json with all the required sprites
 	result = []
-	for i in range(spriteSheet.SpritesLength()):
-		sheet = spriteSheet.Sprites(i)
-		sheetName = sheet.Name().decode("utf-8")
+	for i in range(sprite_sheet.SpritesLength()):
+		sheet = sprite_sheet.Sprites(i)
+		sheet_name = sheet.Name().decode("utf-8")
 
-		if allowedSheetNames is not None and sheetName not in allowedSheetNames:
+		if allowed_sheet_names is not None and sheet_name not in allowed_sheet_names:
 			continue
 
-		spriteInfo = defaultdict(list)
-		spriteIndices = defaultdict(list)
+		sprite_info = defaultdict(list)
+		sprite_indices = defaultdict(list)
 
 		# this value is just for logging purposes - it does not correspond to the XML or any gamefile value
 		index_counter = 0
@@ -67,22 +67,22 @@ def buildSpritesheetJson(spriteSheet, allowedSheetNames=None):
 			if not widthHeightParsing(sprite, requiredWidthHeight=(8.0, 8.0)):
 				continue
 
-			currentSprite = sprite.Name().decode("utf-8")
-			spriteInfo[currentSprite].append(spriteToDict(sprite))
-			spriteIndices[currentSprite].append(current_index)
+			current_sprite = sprite.Name().decode("utf-8")
+			sprite_info[current_sprite].append(spriteToDict(sprite))
+			sprite_indices[current_sprite].append(current_index)
 
 		result.append({
-			"name": sheetName,
+			"name": sheet_name,
 			"atlasId": sheet.AtlasId(),
 			"sprites": [
 				{
 					"name": name,
 					"spriteLocation": [
 						{**frame, "index": idx}
-						for frame, idx in zip(frames, spriteIndices[name])
+						for frame, idx in zip(frames, sprite_indices[name])
 					]
 				}
-				for name, frames in spriteInfo.items()
+				for name, frames in sprite_info.items()
 			]
 		})
 
@@ -90,25 +90,25 @@ def buildSpritesheetJson(spriteSheet, allowedSheetNames=None):
 
 
 
-def loadSpritesheet(spriteFilePath):
+def loadSpritesheet(sprite_file_path):
 	try:
-		with open(spriteFilePath, "rb") as f:
+		with open(sprite_file_path, "rb") as f:
 			data = f.read()
 
 		buffer = bytearray(data)
-		spriteSheetRoot = SpriteSheetRoot.SpriteSheetRoot.GetRootAsSpriteSheetRoot(buffer, 0)
-		return spriteSheetRoot
+		sprite_sheet_root = SpriteSheetRoot.SpriteSheetRoot.GetRootAsSpriteSheetRoot(buffer, 0)
+		return sprite_sheet_root
 	except exception as error:
 		print(f"Unable to find file path or failure to read file data, please validate file path and or the decoded "
 		      f"Schema files - see exception - {error}")
 
 
-def loadSpriteMapRequirements(spriteRequirements):
+def loadSpriteMapRequirements(sprite_requirements):
 	try:
-		with open(spriteRequirements) as f:
-			spriteMapReqs = json.load(f)
-			if spriteMapReqs is not None:
-				return set(spriteMapReqs)
+		with open(sprite_requirements) as f:
+			sprite_map_reqs = json.load(f)
+			if sprite_map_reqs is not None:
+				return set(sprite_map_reqs)
 	except:
 		print("No spriteMapRequirements.json found, exporting all sprites")
 
@@ -124,27 +124,27 @@ def widthHeightParsing(sprite, requiredWidthHeight=(None, None)):
 
 if __name__ == "__main__":
 
-	spriteSheet = loadSpritesheet(SPRITE_SHEET_BIN)
+	sprite_sheet = loadSpritesheet(SPRITE_SHEET_BIN)
 	# load optional specified spritesheets
 	spriteMapSet = loadSpriteMapRequirements(SPRITE_MAP_REQUIREMENTS)
 
 	# returns a dictionary with all necessary values to map each sprite on the spritesheet
-	spriteSheetDict = {
-		"spritesheets": buildSpritesheetJson(spriteSheet, spriteMapSet),
+	sprite_sheet_dict = {
+		"spritesheets": buildSpritesheetJson(sprite_sheet, spriteMapSet),
 		"animated_sprites": [
 			{
-				"name": (anim := spriteSheet.AnimatedSprites(i)).Name().decode("utf-8"),
+				"name": (anim := sprite_sheet.AnimatedSprites(i)).Name().decode("utf-8"),
 				"index": anim.Index(),
 				"set": anim.Set(),
 				"direction": anim.Direction(),
 				"action": anim.Action(),
 				"sprite": spriteToDict(anim.Sprite())
 			}
-			for i in range(spriteSheet.AnimatedSpritesLength())
+			for i in range(sprite_sheet.AnimatedSpritesLength())
 			# specify what sprite width and height you want to export
-			if widthHeightParsing(spriteSheet.AnimatedSprites(i).Sprite(), requiredWidthHeight=(8.0, 8.0))
+			if widthHeightParsing(sprite_sheet.AnimatedSprites(i).Sprite(), requiredWidthHeight=(8.0, 8.0))
 		]
 	}
 
 with open("../spritesheet.json", "w") as f:
-	json.dump(spriteSheetDict, f, indent=2)
+	json.dump(sprite_sheet_dict, f, indent=2)
