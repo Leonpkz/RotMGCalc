@@ -1,7 +1,6 @@
-import json
-from collections import Counter
 import xml.etree.ElementTree as ET
 import os
+
 
 """
 This file is to be used on the unnamed images extracted from the sprite sheets to make manually renaming the 
@@ -16,11 +15,14 @@ This will enable the following
 
 # XML for specific sheet, for example equip.xml
 INPUT_XML = os.environ.get("INPUT_XML")
+# TODO OS IMPORT
+BASE_RENAMED_SPRITES_DIR = r'C:\Code\RotMGCalc\RotMGCalc\project\utils\renamed_sprites'
+# TODO OS IMPORT
+PARSED_OUTPUT_SPRITES = os.environ.get("PARSED_OUTPUT_SPRITES")
 # we only want these sprites, so only the tags with these labels will be exported, thus reducing data
 labels_required = {"ARMOR", "WEAPON", "RING", "ABILITY"}
 
 finished_sprites = 'spriteRenameComplete.xml'
-
 
 def spriteSheetReader(input_xml):
 	"""
@@ -36,6 +38,7 @@ def spriteSheetReader(input_xml):
 
 	results = []
 	index_counter = 0
+	file_count = {}
 
 	for obj in root.findall(".//Object"):
 		# get the required attributes to verify sprites, honestly its a lot but deca does not name things aptly
@@ -55,6 +58,7 @@ def spriteSheetReader(input_xml):
 		if not (label_list & labels_required):
 			continue
 
+		file_count[file] += 1
 
 		results.append({
 			"id": id,
@@ -66,10 +70,7 @@ def spriteSheetReader(input_xml):
 		})
 	# sort by file so it matches folder order
 	results.sort(key=lambda x: x["file"].lower())
-	for result in results:
-		index_counter += 1
-		result["index"] = index_counter
-	return results
+	return results, file_count
 
 """	
 	for r in results:
@@ -79,7 +80,6 @@ def spriteSheetReader(input_xml):
 		print(f"Display ID: {r['display_id']}")
 		print(f"Description: {r['description']}")
 		print(f"Labels: {', '.join(r['labels'])}")
-		print(f"Index: {r['index']}")
 		print("-" * 40)
 """
 
@@ -89,12 +89,23 @@ def saveCurrentProgress():
 	return
 
 
-def spriteRenamer(object, image):
+def spriteRenamer(object):
 	# get the list of renamed sprites to be skipped
 	renamed_sprites = spriteSheetReader('spriteRenameComplete.xml')
+
+	tree = ET.parse(renamed_sprites)
+	root = tree.getroot()
+
+	# folder_name = os.path.splitext(file_text.strip())[0]
+	# folder_path = os.path.join(BASE_DIR, folder_name)
+	for obj in root.findall(".//Object"):
+		return obj
 
 	return
 
 
 if __name__ == '__main__':
-	spriteSheetReader(INPUT_XML)
+	equipObjects = spriteSheetReader(INPUT_XML)
+	#for equipObject in equipObjects:
+	#	spriteRenamer(equipObject)
+
