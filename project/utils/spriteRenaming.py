@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 import os
-
+import tkinter
+from PIL import Image, ImageTk
 
 """
 This file is to be used on the unnamed images extracted from the sprite sheets to make manually renaming the 
@@ -23,6 +24,7 @@ PARSED_OUTPUT_SPRITES = os.environ.get("PARSED_OUTPUT_SPRITES")
 labels_required = {"ARMOR", "WEAPON", "RING", "ABILITY"}
 
 finished_sprites = 'spriteRenameComplete.xml'
+
 
 def spriteSheetReader(input_xml):
 	"""
@@ -72,6 +74,7 @@ def spriteSheetReader(input_xml):
 	results.sort(key=lambda x: x["file"].lower())
 	return results, file_count
 
+
 """	
 	for r in results:
 		print(f"ID: {r['id']}")
@@ -82,7 +85,6 @@ def spriteSheetReader(input_xml):
 		print(f"Labels: {', '.join(r['labels'])}")
 		print("-" * 40)
 """
-
 
 
 def saveCurrentProgress():
@@ -104,8 +106,21 @@ def spriteRenamer(object):
 	return
 
 
+def imagePreview(path, size=(0, 0)):
+	root = tkinter.Tk()  # start window
+	root.title("Sprite Preview Window")
+	raw_image = Image.open(path)
+
+	if size != (0, 0):  # change size of preview if specified resolution selected
+		raw_image = raw_image.resize(size)
+
+	image = ImageTk.PhotoImage(raw_image)
+	panel = tkinter.Label(root, image=image)
+	panel.pack()
+	root.mainloop()
+
+
 if __name__ == '__main__':
 	equipObjects = spriteSheetReader(INPUT_XML)
-	#for equipObject in equipObjects:
-	#	spriteRenamer(equipObject)
-
+#for equipObject in equipObjects:
+#	spriteRenamer(equipObject)
