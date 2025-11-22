@@ -112,10 +112,10 @@ def imagePreview(path, size=(0, 0)):
 	raw_image = Image.open(path)
 
 	if size != (0, 0):  # change size of preview if specified resolution selected
-		raw_image = raw_image.resize(size)
+		raw_image = raw_image.resize(size, Image.NEAREST)
 
 	image = ImageTk.PhotoImage(raw_image)
-	panel = tkinter.Label(root, image=image)
+	panel = tkinter.Label(root, image=image, bg='#00ff08')
 	panel.pack()
 	root.mainloop()
 
