@@ -1,6 +1,8 @@
 import xml.etree.ElementTree as ET
 import os
 import tkinter
+from os import error
+
 from PIL import Image, ImageTk
 
 """
@@ -43,7 +45,6 @@ def spriteSheetReader(input_xml):
 	root = tree.getroot()
 
 	results = []
-	index_counter = 0
 	file_count = {}
 
 	for obj in root.findall(".//Object"):
@@ -105,12 +106,9 @@ def spriteRenamer(sprite_file_path, sprite_info):
 	tree = ET.parse(renamed_sprites)
 	root = tree.getroot()
 
-	# folder_name = os.path.splitext(file_text.strip())[0]
-	# folder_path = os.path.join(BASE_DIR, folder_name)
 	for obj in root.findall(".//Object"):
 		return obj
-
-	return
+	return None
 
 
 def imagePreview(path, size=(0, 0)):
@@ -130,14 +128,21 @@ def imagePreview(path, size=(0, 0)):
 if __name__ == '__main__':
 	equipObjects, spriteCountPerSheet = spriteSheetReader(INPUT_XML)
 
+	parsedSpritesRoot = os.listdir(PARSED_OUTPUT_SPRITES)
+	renamedSpritesRoot = os.listdir(BASE_RENAMED_SPRITES_DIR)
+
 	# check if the destination directories exist, if not, create them
-	for originalFolder in os.listdir(PARSED_OUTPUT_SPRITES):
+	for originalFolder in parsedSpritesRoot:
 		dest_path = os.path.join(BASE_RENAMED_SPRITES_DIR, originalFolder)
 		if not os.path.exists(dest_path):
 			os.mkdir(dest_path)
 
+	for spriteFolders in parsedSpritesRoot:
+		spriteFolderPath = os.path.join(PARSED_OUTPUT_SPRITES, spriteFolders)
 
+		fileCount = len(os.listdir(spriteFolderPath))
 
+		if fileCount != spriteCountPerSheet[spriteFolders]:
+			print(f"You appear to have the incorrect amount of sprites in the folder {spriteFolders}, it is expecting "
+			      f"{fileCount} but shows {spriteCountPerSheet[spriteFolders]}.")
 
-#for equipObject in equipObjects:
-#	spriteRenamer(equipObject)
