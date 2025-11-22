@@ -16,9 +16,9 @@ This will enable the following
 
 # XML for specific sheet, for example equip.xml
 INPUT_XML = os.environ.get("INPUT_XML")
-# TODO OS IMPORT
-BASE_RENAMED_SPRITES_DIR = r'C:\Code\RotMGCalc\RotMGCalc\project\utils\renamed_sprites'
-# TODO OS IMPORT
+# Folder for the sprites to be / already renamed by this script
+BASE_RENAMED_SPRITES_DIR = os.environ.get("BASE_RENAMED_SPRITES_DIR")
+# Manually parsed sprites, not renamed
 PARSED_OUTPUT_SPRITES = os.environ.get("PARSED_OUTPUT_SPRITES")
 # we only want these sprites, so only the tags with these labels will be exported, thus reducing data
 labels_required = {"ARMOR", "WEAPON", "RING", "ABILITY"}
