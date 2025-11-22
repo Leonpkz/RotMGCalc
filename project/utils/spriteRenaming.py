@@ -98,7 +98,7 @@ def saveCurrentProgress():
 	return
 
 
-def spriteRenamer(object):
+def spriteRenamer(sprite_file_path, sprite_info):
 	# get the list of renamed sprites to be skipped
 	renamed_sprites, spriteCountPerSheet = spriteSheetReader('spriteRenameComplete.xml')
 
@@ -129,9 +129,15 @@ def imagePreview(path, size=(0, 0)):
 
 if __name__ == '__main__':
 	equipObjects, spriteCountPerSheet = spriteSheetReader(INPUT_XML)
-	for item in os.listdir(PARSED_OUTPUT_SPRITES):
-		print(item)
-	for item in os.listdir(BASE_RENAMED_SPRITES_DIR):
-		print (item)
+
+	# check if the destination directories exist, if not, create them
+	for originalFolder in os.listdir(PARSED_OUTPUT_SPRITES):
+		dest_path = os.path.join(BASE_RENAMED_SPRITES_DIR, originalFolder)
+		if not os.path.exists(dest_path):
+			os.mkdir(dest_path)
+
+
+
+
 #for equipObject in equipObjects:
 #	spriteRenamer(equipObject)
