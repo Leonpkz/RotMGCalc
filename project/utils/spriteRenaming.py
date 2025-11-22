@@ -146,3 +146,5 @@ if __name__ == '__main__':
 			print(f"You appear to have the incorrect amount of sprites in the folder {spriteFolders}, it is expecting "
 			      f"{fileCount} but shows {spriteCountPerSheet[spriteFolders]}.")
 
+
+		renamedSpriteFolder = os.path.join(BASE_RENAMED_SPRITES_DIR, spriteFolders)
