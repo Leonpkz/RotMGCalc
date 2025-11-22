@@ -34,6 +34,10 @@ def spriteSheetReader(input_xml):
 
 	this is also used to read the spriteRenameComplete.xml file which will be used to verify what has already
 	been done, so I can pick up from where I left off
+
+	:returns: ID (Item name), Type (Item ID), File (SpriteSheet item is on), Display ID, Description, and Labels packed
+	as a nested dictionaries in a list (results).
+	Item count per sprite sheet as a dictionary (file_count)
 	"""
 	tree = ET.parse(input_xml)
 	root = tree.getroot()
@@ -60,7 +64,10 @@ def spriteSheetReader(input_xml):
 		if not (label_list & labels_required):
 			continue
 
-		file_count[file] += 1
+		try:
+			file_count[file] += 1
+		except KeyError:
+			file_count.update({file: 1})
 
 		results.append({
 			"id": id,
@@ -93,7 +100,7 @@ def saveCurrentProgress():
 
 def spriteRenamer(object):
 	# get the list of renamed sprites to be skipped
-	renamed_sprites = spriteSheetReader('spriteRenameComplete.xml')
+	renamed_sprites, spriteCountPerSheet = spriteSheetReader('spriteRenameComplete.xml')
 
 	tree = ET.parse(renamed_sprites)
 	root = tree.getroot()
@@ -121,6 +128,10 @@ def imagePreview(path, size=(0, 0)):
 
 
 if __name__ == '__main__':
-	equipObjects = spriteSheetReader(INPUT_XML)
+	equipObjects, spriteCountPerSheet = spriteSheetReader(INPUT_XML)
+	for item in os.listdir(PARSED_OUTPUT_SPRITES):
+		print(item)
+	for item in os.listdir(BASE_RENAMED_SPRITES_DIR):
+		print (item)
 #for equipObject in equipObjects:
 #	spriteRenamer(equipObject)
