@@ -148,3 +148,9 @@ if __name__ == '__main__':
 
 
 		renamedSpriteFolder = os.path.join(BASE_RENAMED_SPRITES_DIR, spriteFolders)
+
+		for spriteImage in os.listdir(spriteFolderPath):
+			spriteImagePath = os.path.join(spriteFolderPath, spriteImage)
+			imagePreview(spriteImagePath, (0, 0))
+
+
