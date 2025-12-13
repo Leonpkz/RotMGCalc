@@ -99,5 +99,5 @@ if __name__ == "__main__":
 	# compute the final throwaway binary set
 	# TODO - MY OUTPUT IS NOT COMPLETE, ONCE THE SPRITES ARE MANUALLY PARSED IT WILL BE USEABLE, THIS IS FOR TESTING
 	throwawayHashedSprites.difference_update(hashedSprites)
-	print(len(throwawayHashedSprites))
+	saveSkipBinary(throwawayHashedSprites)
 
