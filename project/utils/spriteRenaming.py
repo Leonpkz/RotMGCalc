@@ -2,10 +2,13 @@ import xml.etree.ElementTree as ET
 import os
 import tkinter
 import shutil
+
 import unusedSpriteToBinary
 from os import error
 
 from PIL import Image, ImageTk
+
+from project.utils.unusedSpriteToBinary import computeHash, SKIP_ARCHIVE
 
 """
 This file is to be used on the unnamed images extracted from the sprite sheets to make manually renaming the 
@@ -27,7 +30,7 @@ PARSED_OUTPUT_SPRITES = os.environ.get("PARSED_OUTPUT_SPRITES")
 # we only want these sprites, so only the tags with these labels will be exported, thus reducing data
 labels_required = {"ARMOR", "WEAPON", "RING", "ABILITY"}
 
-finished_sprites = 'spriteRenameComplete.xml'
+FINISHED_SPRITES = 'spriteRenameComplete.xml'
 
 
 def spriteSheetReader(input_xml):
@@ -81,6 +84,7 @@ def spriteSheetReader(input_xml):
 			"display_id": display_id,
 			"description": description,
 			"file": file,
+			"imageHash": imageHash,
 		})
 	# sort by file so it matches folder order
 	results.sort(key=lambda x: x["file"].lower())
@@ -99,8 +103,11 @@ def spriteSheetReader(input_xml):
 """
 
 
-def saveCurrentProgress():
-	return
+def saveCurrentProgress(equipment_data):
+	with open(FINISHED_SPRITES, "a+") as f:
+		return
+
+
 
 
 def spriteRenamer(sprite_file_path, sprite_info):
@@ -116,17 +123,15 @@ def spriteRenamer(sprite_file_path, sprite_info):
 
 
 def imagePreview(path, size=(0, 0)):
-	root = tkinter.Tk()  # start window
-	root.title("Sprite Preview Window")
 	raw_image = Image.open(path)
 
 	if size != (0, 0):  # change size of preview if specified resolution selected
 		raw_image = raw_image.resize(size, Image.NEAREST)
 
 	image = ImageTk.PhotoImage(raw_image)
-	panel = tkinter.Label(root, image=image, bg='#00ff08')
-	panel.pack()
-	root.mainloop()
+	# panel = tkinter.Label(root, image=image, bg='#00ff08')
+	panel.image = image
+
 
 
 if __name__ == '__main__':
@@ -135,31 +140,52 @@ if __name__ == '__main__':
 	parsedSpritesRoot = os.listdir(PARSED_OUTPUT_SPRITES)
 	renamedSpritesRoot = os.listdir(BASE_RENAMED_SPRITES_DIR)
 
+	rootWindow = tkinter.Tk()
+	rootWindow.title("Sprite Preview")
+	panel = tkinter.Label(rootWindow, bg='#00ff08')
+	panel.pack()
+
 	# check if the destination directories exist, if not, create them
 	for originalFolder in parsedSpritesRoot:
 		dest_path = os.path.join(BASE_RENAMED_SPRITES_DIR, originalFolder)
 		if not os.path.exists(dest_path):
 			os.mkdir(dest_path)
 
+	# iterate through sprite folders
 	for spriteFolders in parsedSpritesRoot:
 		spriteFolderPath = os.path.join(PARSED_OUTPUT_SPRITES, spriteFolders)
 
+		# files available on the disk
 		fileCount = len(os.listdir(spriteFolderPath))
 
 		if fileCount < spriteCountPerSheet[spriteFolders]:
 			print(f"You appear to have the incorrect amount of sprites in the folder {spriteFolders}, it is expecting "
-			      f"{fileCount} but shows {spriteCountPerSheet[spriteFolders]}.")
+			      f"{spriteCountPerSheet[spriteFolders]} but shows {fileCount}.")
 		if fileCount > spriteCountPerSheet[spriteFolders]:
 			print(f"You appear to have the incorrect amount of sprites in the folder {spriteFolders}, it is expecting "
-			      f"{fileCount} but shows {spriteCountPerSheet[spriteFolders]}.")
+			      f"{spriteCountPerSheet[spriteFolders]} but shows {fileCount}.")
 		else:
 			print(f"Sprite count appears to be correct for directory {spriteFolders}")
 
 		renamedSpriteFolder = os.path.join(BASE_RENAMED_SPRITES_DIR, spriteFolders)
 
+		currentFileCount = 0
+
 		for spriteImage in os.listdir(spriteFolderPath):
+			currentFileCount += 1
+			if currentFileCount > spriteCountPerSheet[spriteFolders]:
+				break
 
 			spriteImagePath = os.path.join(spriteFolderPath, spriteImage)
 			imagePreview(spriteImagePath, size=(500, 500))
+			spriteImageHash = computeHash(spriteImagePath)
+
+
+			print("1")
+			rootWindow.update()
+
+
+
+
 
 
