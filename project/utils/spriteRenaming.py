@@ -2,6 +2,7 @@ import xml.etree.ElementTree as ET
 import os
 import tkinter
 import shutil
+import unusedSpriteToBinary
 from os import error
 
 from PIL import Image, ImageTk
