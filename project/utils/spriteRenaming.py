@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 import os
 import tkinter
+import shutil
 from os import error
 
 from PIL import Image, ImageTk
@@ -55,6 +56,8 @@ def spriteSheetReader(input_xml):
 		display_id = obj.findtext("DisplayId")
 		description = obj.findtext("Description")
 		file = obj.findtext(".//Texture/File")
+		# used for caching images of the sprites, so that they can be skipped in future runs
+		imageHash = obj.findtext(".//Texture/ImageHash")
 
 		# skip entries missing labels or file
 		if not labels or not file:
@@ -142,15 +145,20 @@ if __name__ == '__main__':
 
 		fileCount = len(os.listdir(spriteFolderPath))
 
-		if fileCount != spriteCountPerSheet[spriteFolders]:
+		if fileCount < spriteCountPerSheet[spriteFolders]:
 			print(f"You appear to have the incorrect amount of sprites in the folder {spriteFolders}, it is expecting "
 			      f"{fileCount} but shows {spriteCountPerSheet[spriteFolders]}.")
-
+		if fileCount > spriteCountPerSheet[spriteFolders]:
+			print(f"You appear to have the incorrect amount of sprites in the folder {spriteFolders}, it is expecting "
+			      f"{fileCount} but shows {spriteCountPerSheet[spriteFolders]}.")
+		else:
+			print(f"Sprite count appears to be correct for directory {spriteFolders}")
 
 		renamedSpriteFolder = os.path.join(BASE_RENAMED_SPRITES_DIR, spriteFolders)
 
 		for spriteImage in os.listdir(spriteFolderPath):
+
 			spriteImagePath = os.path.join(spriteFolderPath, spriteImage)
-			imagePreview(spriteImagePath, (0, 0))
+			imagePreview(spriteImagePath, size=(500, 500))
 
 
