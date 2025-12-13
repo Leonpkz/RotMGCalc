@@ -34,10 +34,10 @@ def computeHash(imagePath):
 
 
 def loadSkipBinary():
-	'''
+	"""
 	returns the binary data as a set, each 32 bytes in size. you can encode your own images which should then yield
 	the same binary data for my encoded data in the file "skiparchive.bin".
-	'''
+	"""
 	skipped_set = set()
 	with open(SKIP_ARCHIVE, "rb") as skipBinaryData:
 		if not skipBinaryData:
@@ -50,13 +50,12 @@ def loadSkipBinary():
 	return skipped_set
 
 
-def saveSkipBinary(skip_set):
+def saveSkipBinary(skipSet):
 	# saves the set of encoded sprite hashes to the binary file
 	print("Saving skip binary...")
-	with open(SKIP_ARCHIVE, "wb") as skipBinaryData:
-		for spriteHash in skip_set:
+	with open(SKIP_ARCHIVE, "ab") as skipBinaryData:
+		for spriteHash in skipSet:
 			skipBinaryData.write(spriteHash)
-		print("Save complete")
 
 
 def returnHashedImages(imageFolder):
@@ -83,11 +82,11 @@ def updateSkipBinary(originalFolder, parsedFolder):
 	:arg    parsedFolder: Directory of manually parsed sprites
 	"""
 	# TODO - RENAME THIS TO THE PARSED FOLDER, AS IT CURRENTLY POINTS TO THE NON-RENAMED SPRITES
-	hashedSprites = set(returnHashedImages(parsedFolder))
-	throwawayHashedSprites = set(returnHashedImages(originalFolder))
+	hashedSprites = returnHashedImages(parsedFolder)
+	throwawayHashedSprites = returnHashedImages(originalFolder)
 
 	# compute the final throwaway binary set
-	# TODO - MY OUTPUT IS NOT COMPLETE, ONCE THE SPRITES ARE MANUALLY PARSED IT WILL BE USEABLE, THIS IS FOR TESTING
+	# TODO - MY OUTPUT IS NOT COMPLETE, ONCE THE SPRITES ARE MANUALLY PARSED IT WILL BE USABLE, THIS IS FOR TESTING
 	throwawayHashedSprites.difference_update(hashedSprites)
 
 	skipBinary = loadSkipBinary()
@@ -102,8 +101,12 @@ def updateSkipBinary(originalFolder, parsedFolder):
 		saveSkipBinary(throwawayHashedSprites)
 
 
-def checkIfSkip():
-	return None
+def checkIfSkip(imagePath, skipBinary):
+	imageHash = computeHash(imagePath)
+	if imageHash in skipBinary:
+		return True
+	else:
+		return False
 
 
 if __name__ == "__main__":
