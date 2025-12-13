@@ -21,14 +21,14 @@ Final Sprite Count - ...
 """
 
 SKIP_ARCHIVE = "skiparchive.bin"
-ORIGINAL_SPRITES = os.environ.get("ORIGINAL_SPRITES")
-PARSED_OUTPUT_SPRITES = os.environ.get("PARSED_OUTPUT_SPRITES")
+ORIGINAL_OUTPUT_FOLDER = os.environ.get("ORIGINAL_SPRITES")
+PARSED_OUTPUT_FOLDER = os.environ.get("PARSED_OUTPUT_SPRITES")
 
 def computeHash(imagePath):
 	# return encoded hash for a sprite
 	with open(imagePath, "rb") as imageFile:
 		imageBytes = imageFile.read()
-		return hashlib.sha256(imageBytes).hexdigest()
+		return hashlib.sha256(imageBytes).digest()
 
 def loadSkipBinary():
 	'''
@@ -48,18 +48,59 @@ def loadSkipBinary():
 
 def saveSkipBinary(skip_set):
 	# saves the set of encoded sprite hashes to the binary file
+	print("Saving skip binary...")
 	with open(SKIP_ARCHIVE, "wb") as skipBinaryData:
 		for spriteHash in skip_set:
 			skipBinaryData.write(spriteHash)
+		print("Save complete")
 
-def updateSkipBinary(ORIGINAL_SPRITES, PARSED_OUTPUT_SPRITES):
+def updateSkipBinary(originalFolder, parsedFolder):
 	"""
 	Updates the binary as needed
 
-	:arg	ORIGINAL_SPRITES: Directory of all extracted sprites
-	:arg    PARSED_OUTPUT_SPRITES: Directory of manually parsed sprites
+	:arg	originalFolder: Directory of all extracted sprites
+	:arg    parsedFolder: Directory of manually parsed sprites
 	"""
-	skipSet = loadSkipBinary()
+	hashedSprites = set()
+	throwawayHashedSprites = set()
+
+	originalSpritesRoot = os.listdir(originalFolder)
+	# TODO - RENAME THIS TO THE PARSED FOLDER, AS IT CURRENTLY POINTS TO THE NON-RENAMED SPRITES
+	currentParsedSpritesRoot = os.listdir(parsedFolder)
+	for currentParsedSpriteFolders in currentParsedSpritesRoot:
+		# get the current / parsed sprites file path, and then hash those images
+		currentSprites = [
+			os.path.join(parsedFolder, currentParsedSpriteFolders, sprite)
+			for sprite in os.listdir(os.path.join(parsedFolder, currentParsedSpriteFolders))
+		]
+		hashedSprites.update(
+			computeHash(os.path.abspath(sprite)) for sprite in currentSprites
+		)
+
+	for originalSpriteFolders in originalSpritesRoot:
+		# do the same thing as the above, but for the full sprite list
+		throwawaySprites = [
+			os.path.join(originalFolder, originalSpriteFolders, sprite)
+			for sprite in os.listdir(os.path.join(originalFolder, originalSpriteFolders))
+		]
+		throwawayHashedSprites.update(
+			computeHash(os.path.abspath(sprite)) for sprite in throwawaySprites
+		)
+	# compute the final throwaway binary set
+	# TODO - MY OUTPUT IS NOT COMPLETE, ONCE THE SPRITES ARE MANUALLY PARSED IT WILL BE USEABLE, THIS IS FOR TESTING
+	throwawayHashedSprites.difference_update(hashedSprites)
+
+	skipBinary = loadSkipBinary()
+
+	if len(skipBinary) > 1:
+		print("Binary file found, saving the difference")
+		skipBinary.difference_update(throwawayHashedSprites)
+		saveSkipBinary(skipBinary)
+		return
+	else:
+		print("Binary file not found")
+		saveSkipBinary(throwawayHashedSprites)
+
 
 
 
@@ -70,34 +111,7 @@ def checkIfSkip(hash):
 if __name__ == "__main__":
 	# if there is a binary, load it
 	# skippedSet = loadSkipBinary()
-	hashedSprites = set()
-	throwawayHashedSprites = set()
-
-	originalSpritesRoot = os.listdir(ORIGINAL_SPRITES)
-	# TODO - RENAME THIS TO THE PARSED FOLDER, AS IT CURRENTLY POINTS TO THE NON-RENAMED SPRITES
-	currentParsedSpritesRoot = os.listdir(PARSED_OUTPUT_SPRITES)
-	for currentParsedSpriteFolders in currentParsedSpritesRoot:
-		# get the current / parsed sprites file path, and then hash those images
-		currentSprites = [
-			os.path.join(PARSED_OUTPUT_SPRITES, currentParsedSpriteFolders, sprite)
-			for sprite in os.listdir(os.path.join(PARSED_OUTPUT_SPRITES, currentParsedSpriteFolders))
-			]
-		hashedSprites.update(
-			computeHash(os.path.abspath(sprite)) for sprite in currentSprites
-		)
+	updateSkipBinary(ORIGINAL_OUTPUT_FOLDER, PARSED_OUTPUT_FOLDER)
 
 
-	for originalSpriteFolders in originalSpritesRoot:
-		# do the same thing as the above, but for the full sprite list
-		throwawaySprites = [
-			os.path.join(ORIGINAL_SPRITES, originalSpriteFolders, sprite)
-			for sprite in os.listdir(os.path.join(ORIGINAL_SPRITES, originalSpriteFolders))
-		]
-		throwawayHashedSprites.update(
-			computeHash(os.path.abspath(sprite)) for sprite in throwawaySprites
-		)
-	# compute the final throwaway binary set
-	# TODO - MY OUTPUT IS NOT COMPLETE, ONCE THE SPRITES ARE MANUALLY PARSED IT WILL BE USEABLE, THIS IS FOR TESTING
-	throwawayHashedSprites.difference_update(hashedSprites)
-	saveSkipBinary(throwawayHashedSprites)
 
