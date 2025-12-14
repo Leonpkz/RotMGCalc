@@ -3,6 +3,8 @@ import os
 import tkinter
 import shutil
 
+from distlib.compat import raw_input
+
 import unusedSpriteToBinary
 from os import error
 
@@ -129,10 +131,18 @@ def imagePreview(path, size=(0, 0)):
 		raw_image = raw_image.resize(size, Image.NEAREST)
 
 	image = ImageTk.PhotoImage(raw_image)
-	# panel = tkinter.Label(root, image=image, bg='#00ff08')
+	panel = tkinter.Label(image=image, bg='#00ff08')
 	panel.image = image
 
+def nextSpriteButtonPress():
+	actionVar.set(True)
 
+def initialiseWindow():
+	rootWindow = tkinter.Tk()
+	rootWindow.title("Sprite Preview")
+	panel = tkinter.Label(rootWindow, bg='#00ff08')
+	panel.pack()
+	return rootWindow, panel
 
 if __name__ == '__main__':
 	equipObjects, spriteCountPerSheet = spriteSheetReader(INPUT_XML)
@@ -140,10 +150,9 @@ if __name__ == '__main__':
 	parsedSpritesRoot = os.listdir(PARSED_OUTPUT_SPRITES)
 	renamedSpritesRoot = os.listdir(BASE_RENAMED_SPRITES_DIR)
 
-	rootWindow = tkinter.Tk()
-	rootWindow.title("Sprite Preview")
-	panel = tkinter.Label(rootWindow, bg='#00ff08')
-	panel.pack()
+	# for the button nextSpriteButtonPress
+	actionVar = tkinter.BooleanVar(value=False)
+	rootWindow, panel = initialiseWindow()
 
 	# check if the destination directories exist, if not, create them
 	for originalFolder in parsedSpritesRoot:
@@ -158,10 +167,7 @@ if __name__ == '__main__':
 		# files available on the disk
 		fileCount = len(os.listdir(spriteFolderPath))
 
-		if fileCount < spriteCountPerSheet[spriteFolders]:
-			print(f"You appear to have the incorrect amount of sprites in the folder {spriteFolders}, it is expecting "
-			      f"{spriteCountPerSheet[spriteFolders]} but shows {fileCount}.")
-		if fileCount > spriteCountPerSheet[spriteFolders]:
+		if fileCount != spriteCountPerSheet[spriteFolders]:
 			print(f"You appear to have the incorrect amount of sprites in the folder {spriteFolders}, it is expecting "
 			      f"{spriteCountPerSheet[spriteFolders]} but shows {fileCount}.")
 		else:
@@ -177,12 +183,13 @@ if __name__ == '__main__':
 				break
 
 			spriteImagePath = os.path.join(spriteFolderPath, spriteImage)
-			imagePreview(spriteImagePath, size=(500, 500))
+			imagePreview(spriteImagePath)
 			spriteImageHash = computeHash(spriteImagePath)
 
 
 			print("1")
-			rootWindow.update()
+			if 1 == True:
+				test = raw_input("Type smt shawty")
 
 
 
