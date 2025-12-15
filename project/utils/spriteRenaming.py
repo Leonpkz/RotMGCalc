@@ -124,6 +124,60 @@ def spriteRenamer(sprite_file_path, sprite_info):
 	return None
 
 
+def equipmentParsing(equipment_data, renamed_sprites, manually_parsed_sprites):
+	"""
+	This function renames the sprite to its "equipobjects" "type", for consistency. it will parse the folders of
+	manually checked sprites and then allow for easy renaming of subsequent updates
+
+	I will be hashing each images data, and attaching it to spriteRenameComplete.xml, this is one way of making
+	sure that i don't repeat images, as there is no guarantee that the extraction will ever give the same name for the
+	sprite twice.
+
+	The only guarantee is that hashing the 8x8 image will always yield the same hash so long as the sprite doesn't
+	change, this will make it very easy to pick up reskins, as well as using it to skip completed images
+
+	"""
+
+
+	# check if the destination directories exist, if not, create them
+	for originalFolder in parsedSpritesRoot:
+		dest_path = os.path.join(BASE_RENAMED_SPRITES_DIR, originalFolder)
+		if not os.path.exists(dest_path):
+			os.mkdir(dest_path)
+
+	# iterate through sprite folders
+	if 1 == 2:
+		for spriteFolders in parsedSpritesRoot:
+			spriteFolderPath = os.path.join(PARSED_OUTPUT_SPRITES, spriteFolders)
+
+			# files available on the disk
+			fileCount = len(os.listdir(spriteFolderPath))
+
+			if fileCount != spriteCountPerSheet[spriteFolders]:
+				print(
+					f"You appear to have the incorrect amount of sprites in the folder {spriteFolders}, it is expecting "
+					f"{spriteCountPerSheet[spriteFolders]} but shows {fileCount}.")
+			else:
+				print(f"Sprite count appears to be correct for directory {spriteFolders}")
+
+			renamedSpriteFolder = os.path.join(BASE_RENAMED_SPRITES_DIR, spriteFolders)
+
+			currentFileCount = 0
+
+			for spriteImage in os.listdir(spriteFolderPath):
+				currentFileCount += 1
+				if currentFileCount > spriteCountPerSheet[spriteFolders]:
+					break
+
+				spriteImagePath = os.path.join(spriteFolderPath, spriteImage)
+				imagePreview(spriteImagePath)
+				spriteImageHash = computeHash(spriteImagePath)
+
+				print("1")
+				if 1 == True:
+					test = raw_input("Type smt shawty")
+
+
 def imagePreview(path, size=(0, 0)):
 	raw_image = Image.open(path)
 
@@ -140,9 +194,9 @@ def nextSpriteButtonPress():
 def initialiseWindow():
 	rootWindow = tkinter.Tk()
 	rootWindow.title("Sprite Preview")
-	panel = tkinter.Label(rootWindow, bg='#00ff08')
-	panel.pack()
-	return rootWindow, panel
+	mainFrame = tkinter.Frame(rootWindow, padx=12, pady=12)
+	mainFrame.grid(row=0, column=0, sticky="nsew")
+	return rootWindow
 
 if __name__ == '__main__':
 	equipObjects, spriteCountPerSheet = spriteSheetReader(INPUT_XML)
@@ -150,46 +204,12 @@ if __name__ == '__main__':
 	parsedSpritesRoot = os.listdir(PARSED_OUTPUT_SPRITES)
 	renamedSpritesRoot = os.listdir(BASE_RENAMED_SPRITES_DIR)
 
-	# for the button nextSpriteButtonPress
-	actionVar = tkinter.BooleanVar(value=False)
-	rootWindow, panel = initialiseWindow()
+	rootWindow = initialiseWindow()
 
-	# check if the destination directories exist, if not, create them
-	for originalFolder in parsedSpritesRoot:
-		dest_path = os.path.join(BASE_RENAMED_SPRITES_DIR, originalFolder)
-		if not os.path.exists(dest_path):
-			os.mkdir(dest_path)
-
-	# iterate through sprite folders
-	for spriteFolders in parsedSpritesRoot:
-		spriteFolderPath = os.path.join(PARSED_OUTPUT_SPRITES, spriteFolders)
-
-		# files available on the disk
-		fileCount = len(os.listdir(spriteFolderPath))
-
-		if fileCount != spriteCountPerSheet[spriteFolders]:
-			print(f"You appear to have the incorrect amount of sprites in the folder {spriteFolders}, it is expecting "
-			      f"{spriteCountPerSheet[spriteFolders]} but shows {fileCount}.")
-		else:
-			print(f"Sprite count appears to be correct for directory {spriteFolders}")
-
-		renamedSpriteFolder = os.path.join(BASE_RENAMED_SPRITES_DIR, spriteFolders)
-
-		currentFileCount = 0
-
-		for spriteImage in os.listdir(spriteFolderPath):
-			currentFileCount += 1
-			if currentFileCount > spriteCountPerSheet[spriteFolders]:
-				break
-
-			spriteImagePath = os.path.join(spriteFolderPath, spriteImage)
-			imagePreview(spriteImagePath)
-			spriteImageHash = computeHash(spriteImagePath)
+	equipmentParsing(equipObjects, renamedSpritesRoot, parsedSpritesRoot)
 
 
-			print("1")
-			if 1 == True:
-				test = raw_input("Type smt shawty")
+rootWindow.mainloop()
 
 
 
