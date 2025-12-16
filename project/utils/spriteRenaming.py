@@ -3,11 +3,6 @@ import os
 import tkinter
 import shutil
 
-from distlib.compat import raw_input
-
-import unusedSpriteToBinary
-from os import error
-
 from PIL import Image, ImageTk
 
 from project.utils.unusedSpriteToBinary import computeHash, SKIP_ARCHIVE
@@ -124,8 +119,13 @@ def spriteRenamer(sprite_file_path, sprite_info):
 	return None
 
 
-def equipmentParsing(equipment_data, renamed_sprites, manually_parsed_sprites):
+def equipmentParsing(*args):
 	"""
+	:arg equipment_data: equipment xml data
+	:arg parsed_sprites_root: manually parsed sprites
+	:arg renamed_sprites_root: renamed sprites (post in-script rename)
+	:arg root_window: window for tkinter
+
 	This function renames the sprite to its "equipobjects" "type", for consistency. it will parse the folders of
 	manually checked sprites and then allow for easy renaming of subsequent updates
 
@@ -146,7 +146,7 @@ def equipmentParsing(equipment_data, renamed_sprites, manually_parsed_sprites):
 			os.mkdir(dest_path)
 
 	# iterate through sprite folders
-	if 1 == 2:
+	if 1 == 1:
 		for spriteFolders in parsedSpritesRoot:
 			spriteFolderPath = os.path.join(PARSED_OUTPUT_SPRITES, spriteFolders)
 
@@ -170,12 +170,11 @@ def equipmentParsing(equipment_data, renamed_sprites, manually_parsed_sprites):
 					break
 
 				spriteImagePath = os.path.join(spriteFolderPath, spriteImage)
-				imagePreview(spriteImagePath)
 				spriteImageHash = computeHash(spriteImagePath)
+				print(spriteImageHash)
+				imagePreview(spriteImagePath)
 
-				print("1")
-				if 1 == True:
-					test = raw_input("Type smt shawty")
+
 
 
 def imagePreview(path, size=(0, 0)):
@@ -187,15 +186,23 @@ def imagePreview(path, size=(0, 0)):
 	image = ImageTk.PhotoImage(raw_image)
 	panel = tkinter.Label(image=image, bg='#00ff08')
 	panel.image = image
+	panel.grid(row=1, column=0)
 
-def nextSpriteButtonPress():
-	actionVar.set(True)
 
-def initialiseWindow():
+def initialiseWindow(*args):
 	rootWindow = tkinter.Tk()
 	rootWindow.title("Sprite Preview")
+	rootWindow.option_add('*tearOff', False)
+
+
 	mainFrame = tkinter.Frame(rootWindow, padx=12, pady=12)
 	mainFrame.grid(row=0, column=0, sticky="nsew")
+
+	button = tkinter.Button(mainFrame, text="Run Parsing")
+	button.bind("<Button-1>", lambda e: button.invoke())
+	button.grid(row=3, column=3)
+
+
 	return rootWindow
 
 if __name__ == '__main__':
@@ -204,9 +211,9 @@ if __name__ == '__main__':
 	parsedSpritesRoot = os.listdir(PARSED_OUTPUT_SPRITES)
 	renamedSpritesRoot = os.listdir(BASE_RENAMED_SPRITES_DIR)
 
-	rootWindow = initialiseWindow()
+	rootWindow = initialiseWindow(equipObjects, parsedSpritesRoot, renamedSpritesRoot)
 
-	equipmentParsing(equipObjects, renamedSpritesRoot, parsedSpritesRoot)
+
 
 
 rootWindow.mainloop()
