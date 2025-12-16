@@ -138,6 +138,7 @@ def equipmentParsing(*args):
 
 	"""
 
+	actionVar = tkinter.BooleanVar(value=False)
 
 	# check if the destination directories exist, if not, create them
 	for originalFolder in parsedSpritesRoot:
@@ -146,7 +147,7 @@ def equipmentParsing(*args):
 			os.mkdir(dest_path)
 
 	# iterate through sprite folders
-	if 1 == 1:
+	if actionVar.get():
 		for spriteFolders in parsedSpritesRoot:
 			spriteFolderPath = os.path.join(PARSED_OUTPUT_SPRITES, spriteFolders)
 
@@ -198,7 +199,7 @@ def initialiseWindow(*args):
 	mainFrame = tkinter.Frame(rootWindow, padx=12, pady=12)
 	mainFrame.grid(row=0, column=0, sticky="nsew")
 
-	button = tkinter.Button(mainFrame, text="Run Parsing")
+	button = tkinter.Button(mainFrame, text="Run Parsing", command=equipmentParsing(*args))
 	button.bind("<Button-1>", lambda e: button.invoke())
 	button.grid(row=3, column=3)
 
