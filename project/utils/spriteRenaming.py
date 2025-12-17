@@ -107,16 +107,8 @@ def saveCurrentProgress(equipment_data):
 
 
 
-def spriteRenamer(sprite_file_path, sprite_info):
-	# get the list of renamed sprites to be skipped
-	renamed_sprites, spriteCountPerSheet = spriteSheetReader('spriteRenameComplete.xml')
-
-	tree = ET.parse(renamed_sprites)
-	root = tree.getroot()
-
-	for obj in root.findall(".//Object"):
-		return obj
-	return None
+def spriteRenamer(sprite_source_path, sprite_target_path, target_name):
+	return
 
 
 def equipmentParsing(*args):
@@ -184,13 +176,25 @@ def imagePreview(path, size=(0, 0)):
 	if size != (0, 0):  # change size of preview if specified resolution selected
 		raw_image = raw_image.resize(size, Image.NEAREST)
 
-	image = ImageTk.PhotoImage(raw_image)
-	panel = tkinter.Label(image=image, bg='#00ff08')
-	panel.image = image
-	panel.grid(row=1, column=0, sticky="s")
+	return ImageTk.PhotoImage(raw_image)
+
+class ReviewSession:
+	def __init__(self):
+		self.currentImagePath = None
+		self.currentImageHash = None
+
+		self.equipmentObjects = []
+		self.spriteCountPerSheet = {}
+		self.completedEquipmentObjects = []
+
+		self.spriteRenameFolderDest = None
+
+	def load_XML_Sources(self, INPUT_XML, FINISHED_SPRITES):
+		self.equipmentObjects, spriteCountPerSheet = spriteSheetReader(INPUT_XML)
+		self.completedEquipmentObjects = spriteSheetReader(FINISHED_SPRITES)
 
 
-def initialiseApp():
+class InitialiseApp:
 	def __init__(self, master):
 		self.master = master
 		master.title("Sprite Renaming")
@@ -204,7 +208,7 @@ def initialiseApp():
 		self.currentTask = None
 
 		menu = tkinter.Menu(master)
-		editMenu = tk.Menu(menu, tearoff=0)
+		editMenu = tkinter.Menu(menu, tearoff=0)
 		editMenu.add_command(label="Undo", command=self.undo)
 		editMenu.add_command(label="Redo", command=self.redo)
 		menu.add_cascade(label="Edit", menu=editMenu)
@@ -223,7 +227,11 @@ def initialiseApp():
 		self.searchBar.pack(fill="x")
 		tkinter.Button(self.rightFrame, text="Search", command=self.runSearch).pack(pady=10)
 
-		self.L
+		self.searchResults = tkinter.Listbox(self.rightFrame)
+		self.searchResults.pack(fill=tkinter.BOTH, expand=True)
+		self.searchResults.bind("<<ListboxSelect>>")
+
+		tkinter.Button(self.rightFrame, text="Next Image", command=self.nextImage).pack(pady=10)
 
 
 
@@ -234,8 +242,9 @@ if __name__ == '__main__':
 	parsedSpritesRoot = os.listdir(PARSED_OUTPUT_SPRITES)
 	renamedSpritesRoot = os.listdir(BASE_RENAMED_SPRITES_DIR)
 
+	initialiseApp()
 
-rootWindow.mainloop()
+initialiseApp().mainloop()
 
 
 
