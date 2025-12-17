@@ -106,20 +106,14 @@ def saveCurrentProgress(equipment_data):
 
 
 
-
 def spriteRenamer(sprite_source_path, sprite_target_path, target_name):
 	return
 
 
-def equipmentParsing(*args):
+def equipmentImageParsing(parsed_sprites_root, renamed_sprites_root):
 	"""
-	:arg equipment_data: equipment xml data
-	:arg parsed_sprites_root: manually parsed sprites
-	:arg renamed_sprites_root: renamed sprites (post in-script rename)
-	:arg root_window: window for tkinter
 
-	This function renames the sprite to its "equipobjects" "type", for consistency. it will parse the folders of
-	manually checked sprites and then allow for easy renaming of subsequent updates
+	This function yields image path data for the currently selected sprite in the gui.
 
 	I will be hashing each images data, and attaching it to spriteRenameComplete.xml, this is one way of making
 	sure that i don't repeat images, as there is no guarantee that the extraction will ever give the same name for the
@@ -127,10 +121,8 @@ def equipmentParsing(*args):
 
 	The only guarantee is that hashing the 8x8 image will always yield the same hash so long as the sprite doesn't
 	change, this will make it very easy to pick up reskins, as well as using it to skip completed images
-
 	"""
 
-	actionVar = tkinter.BooleanVar(value=False)
 
 	# check if the destination directories exist, if not, create them
 	for originalFolder in parsedSpritesRoot:
@@ -139,59 +131,68 @@ def equipmentParsing(*args):
 			os.mkdir(dest_path)
 
 	# iterate through sprite folders
-	if actionVar.get():
-		for spriteFolders in parsedSpritesRoot:
-			spriteFolderPath = os.path.join(PARSED_OUTPUT_SPRITES, spriteFolders)
 
-			# files available on the disk
-			fileCount = len(os.listdir(spriteFolderPath))
+	for spriteFolders in parsedSpritesRoot:
+		spriteFolderPath = os.path.join(PARSED_OUTPUT_SPRITES, spriteFolders)
+		files = os.listdir(spriteFolderPath)
+		# files available on the disk
+		fileCount = len(files)
+		# expected file count, as per the equip.xml data
+		equipObjectsFileCount = spriteCountPerSheet[spriteFolders]
+		# information for the gui
+		fileStatus = None
 
-			if fileCount != spriteCountPerSheet[spriteFolders]:
-				print(
-					f"You appear to have the incorrect amount of sprites in the folder {spriteFolders}, it is expecting "
-					f"{spriteCountPerSheet[spriteFolders]} but shows {fileCount}.")
-			else:
-				print(f"Sprite count appears to be correct for directory {spriteFolders}")
+		if fileCount != equipObjectsFileCount:
+			fileStatus = (
+				f"You appear to have the incorrect amount of sprites in the folder {spriteFolders}, it is expecting "
+				f"{equipObjectsFileCount} but shows {fileCount}.")
+		else:
+			fileStatus = f"Sprite count appears to be correct for directory {spriteFolders}"
 
-			renamedSpriteFolder = os.path.join(BASE_RENAMED_SPRITES_DIR, spriteFolders)
+		# destination rename folder
+		renamedSpriteFolder = os.path.join(BASE_RENAMED_SPRITES_DIR, spriteFolders)
 
-			currentFileCount = 0
+		for spriteImage in files:
+			spriteImagePath = os.path.join(spriteFolderPath, spriteImage)
+			spriteImageHash = computeHash(spriteImagePath)
 
-			for spriteImage in os.listdir(spriteFolderPath):
-				currentFileCount += 1
-				if currentFileCount > spriteCountPerSheet[spriteFolders]:
-					break
-
-				spriteImagePath = os.path.join(spriteFolderPath, spriteImage)
-				spriteImageHash = computeHash(spriteImagePath)
-				print(spriteImageHash)
-				imagePreview(spriteImagePath, size=(500,500))
+			yield {
+				"status": fileStatus,
+				"spritePath": spriteImagePath,
+				"destinationRenamePath": renamedSpriteFolder,
+				"fileCount": fileCount,
+				"equipObjectsFileCount": equipObjectsFileCount,
+				"imageHash": spriteImageHash,
+			}
 
 
 
 
 def imagePreview(path, size=(0, 0)):
 	raw_image = Image.open(path)
-
 	if size != (0, 0):  # change size of preview if specified resolution selected
 		raw_image = raw_image.resize(size, Image.NEAREST)
-
 	return ImageTk.PhotoImage(raw_image)
 
 class ReviewSession:
 	def __init__(self):
+		self.spriteRenameComplete = None
 		self.currentImagePath = None
 		self.currentImageHash = None
 
+		self.completedEquipmentObjects = []
+		self.completedHashes = {}
 		self.equipmentObjects = []
 		self.spriteCountPerSheet = {}
-		self.completedEquipmentObjects = []
 
-		self.spriteRenameFolderDest = None
 
 	def load_XML_Sources(self, INPUT_XML, FINISHED_SPRITES):
 		self.equipmentObjects, spriteCountPerSheet = spriteSheetReader(INPUT_XML)
 		self.completedEquipmentObjects = spriteSheetReader(FINISHED_SPRITES)
+
+		self.completedHashes = {
+			e["imageHash"]: e for e in self.completedEquipmentObjects
+		}
 
 
 class InitialiseApp:
@@ -199,7 +200,7 @@ class InitialiseApp:
 		self.master = master
 		master.title("Sprite Renaming")
 
-		self.imagePaths = []
+		self.equipImages = list(equipmentImageParsing(parsedSpritesRoot, renamedSpritesRoot))
 		self.index = 0
 		self.equipmentData = []
 		self.completedRenamesData = []
@@ -219,10 +220,10 @@ class InitialiseApp:
 		self.rightFrame = tkinter.Frame(master)
 		self.rightFrame.pack(side="right", padx=10, pady=10)
 
-		self.imageLabel = tkinter.label(self.leftFrame)
+		self.imageLabel = tkinter.Label(self.leftFrame)
 		self.imageLabel.pack()
 
-		tkinter.Label(self.rightFrame, text="Fuzzy Search XML Data:").pack(pady=10)
+		tkinter.Label(self.rightFrame, text="Fuzzy Search XML Data:", ).pack(pady=20)
 		self.searchBar = tkinter.Entry(self.rightFrame)
 		self.searchBar.pack(fill="x")
 		tkinter.Button(self.rightFrame, text="Search", command=self.runSearch).pack(pady=10)
@@ -233,6 +234,36 @@ class InitialiseApp:
 
 		tkinter.Button(self.rightFrame, text="Next Image", command=self.nextImage).pack(pady=10)
 
+	def undo(self):
+		return
+
+	def redo(self):
+		return
+
+	def runSearch(self):
+		return
+
+	def nextImage(self):
+		return
+
+	def renderThumbnails(self):
+		for widget in self.leftFrame.winfo_children():
+			widget.destroy()
+
+		for i in range(self.index, self.index + 7):
+			if i >= len(self.equipImages):
+				break
+
+			entry = self.equipImages[i]
+			image = imagePreview(entry["spritePath"], size=(500,500))
+
+			label = tkinter.Label(self.rightFrame, image=image)
+			label.image = image
+			label.pack(side="left")
+
+			label.bind("<Button-1>", lambda e=i: self.nextImage())
+
+
 
 
 
@@ -242,9 +273,10 @@ if __name__ == '__main__':
 	parsedSpritesRoot = os.listdir(PARSED_OUTPUT_SPRITES)
 	renamedSpritesRoot = os.listdir(BASE_RENAMED_SPRITES_DIR)
 
-	initialiseApp()
+	approot = tkinter.Tk()
+	initialiseApp = InitialiseApp(approot)
 
-initialiseApp().mainloop()
+approot.mainloop()
 
 
 
