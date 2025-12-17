@@ -173,7 +173,7 @@ def equipmentParsing(*args):
 				spriteImagePath = os.path.join(spriteFolderPath, spriteImage)
 				spriteImageHash = computeHash(spriteImagePath)
 				print(spriteImageHash)
-				imagePreview(spriteImagePath)
+				imagePreview(spriteImagePath, size=(500,500))
 
 
 
@@ -187,34 +187,52 @@ def imagePreview(path, size=(0, 0)):
 	image = ImageTk.PhotoImage(raw_image)
 	panel = tkinter.Label(image=image, bg='#00ff08')
 	panel.image = image
-	panel.grid(row=1, column=0)
+	panel.grid(row=1, column=0, sticky="s")
 
 
-def initialiseWindow(*args):
-	rootWindow = tkinter.Tk()
-	rootWindow.title("Sprite Preview")
-	rootWindow.option_add('*tearOff', False)
+def initialiseApp():
+	def __init__(self, master):
+		self.master = master
+		master.title("Sprite Renaming")
+
+		self.imagePaths = []
+		self.index = 0
+		self.equipmentData = []
+		self.completedRenamesData = []
+		self.undoStack = []
+		self.redoStack = []
+		self.currentTask = None
+
+		menu = tkinter.Menu(master)
+		editMenu = tk.Menu(menu, tearoff=0)
+		editMenu.add_command(label="Undo", command=self.undo)
+		editMenu.add_command(label="Redo", command=self.redo)
+		menu.add_cascade(label="Edit", menu=editMenu)
+		master.config(menu=menu)
+
+		self.leftFrame = tkinter.Frame(master)
+		self.leftFrame.pack(side="left", padx=10, pady=10)
+		self.rightFrame = tkinter.Frame(master)
+		self.rightFrame.pack(side="right", padx=10, pady=10)
+
+		self.imageLabel = tkinter.label(self.leftFrame)
+		self.imageLabel.pack()
+
+		tkinter.Label(self.rightFrame, text="Fuzzy Search XML Data:").pack(pady=10)
+		self.searchBar = tkinter.Entry(self.rightFrame)
+		self.searchBar.pack(fill="x")
+		tkinter.Button(self.rightFrame, text="Search", command=self.runSearch).pack(pady=10)
+
+		self.L
 
 
-	mainFrame = tkinter.Frame(rootWindow, padx=12, pady=12)
-	mainFrame.grid(row=0, column=0, sticky="nsew")
 
-	button = tkinter.Button(mainFrame, text="Run Parsing", command=equipmentParsing(*args))
-	button.bind("<Button-1>", lambda e: button.invoke())
-	button.grid(row=3, column=3)
-
-
-	return rootWindow
 
 if __name__ == '__main__':
 	equipObjects, spriteCountPerSheet = spriteSheetReader(INPUT_XML)
 
 	parsedSpritesRoot = os.listdir(PARSED_OUTPUT_SPRITES)
 	renamedSpritesRoot = os.listdir(BASE_RENAMED_SPRITES_DIR)
-
-	rootWindow = initialiseWindow(equipObjects, parsedSpritesRoot, renamedSpritesRoot)
-
-
 
 
 rootWindow.mainloop()
