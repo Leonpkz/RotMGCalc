@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Objects>
+  <Object id="DUMMY_ID" type="DUMMY_TYPE">
+    <Labels>DUMMY_LABEL</Labels>
+    <DisplayId>DUMMY_DISPLAY</DisplayId>
+    <Description>Dummy entry to satisfy parser</Description>
+    <File>DUMMY_FILE</File>
+    <ImageHash>0000000000000000000000000000000000000000000000000000000000000000</ImageHash>
+  </Object>
+</Objects>

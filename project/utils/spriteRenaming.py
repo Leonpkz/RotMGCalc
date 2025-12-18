@@ -2,6 +2,7 @@ import xml.etree.ElementTree as ET
 import os
 import tkinter
 import shutil
+from os.path import abspath
 
 from PIL import Image, ImageTk
 
@@ -30,7 +31,7 @@ labels_required = {"ARMOR", "WEAPON", "RING", "ABILITY"}
 FINISHED_SPRITES = 'spriteRenameComplete.xml'
 
 
-def spriteSheetReader(input_xml):
+def spriteSheetReader(input_xml, ignore_labels=False):
 	"""
 	reads an XML with the required data and returns a compact version of that for parsing
 
@@ -51,12 +52,14 @@ def spriteSheetReader(input_xml):
 
 	for obj in root.findall(".//Object"):
 		# get the required attributes to verify sprites, honestly its a lot but deca does not name things aptly
-		type = obj.get("type")
-		id = obj.get("id")
+
+		# the "or" is required so it reads my complete sprites xml
+		type = obj.get("type") or obj.findtext("Type")
+		id = obj.get("id") or obj.findtext("Id")
 		labels = obj.findtext("Labels")
 		display_id = obj.findtext("DisplayId")
 		description = obj.findtext("Description")
-		file = obj.findtext(".//Texture/File")
+		file = obj.findtext(".//Texture/File") or obj.findtext("File")
 		# used for caching images of the sprites, so that they can be skipped in future runs
 		imageHash = obj.findtext(".//Texture/ImageHash")
 
@@ -66,7 +69,7 @@ def spriteSheetReader(input_xml):
 
 		label_list = {lbl.strip().upper() for lbl in labels.split(",") if lbl.strip()}
 
-		if not (label_list & labels_required):
+		if not ignore_labels and not (label_list & labels_required):
 			continue
 
 		try:
@@ -75,16 +78,16 @@ def spriteSheetReader(input_xml):
 			file_count.update({file: 1})
 
 		results.append({
-			"id": id,
-			"type": type,
-			"labels": list(label_list),
-			"display_id": display_id,
-			"description": description,
-			"file": file,
-			"imageHash": imageHash,
+			"Id": id,
+			"Type": type,
+			"Labels": list(label_list),
+			"DisplayID": display_id,
+			"Description": description,
+			"File": file,
+			"ImageHash": imageHash,
 		})
 	# sort by file so it matches folder order
-	results.sort(key=lambda x: x["file"].lower())
+	results.sort(key=lambda x: x["File"].lower())
 	return results, file_count
 
 
@@ -166,8 +169,6 @@ def equipmentImageParsing(parsed_sprites_root, renamed_sprites_root):
 			}
 
 
-
-
 def imagePreview(path, size=(0, 0)):
 	raw_image = Image.open(path)
 	if size != (0, 0):  # change size of preview if specified resolution selected
@@ -182,18 +183,26 @@ class ReviewSession:
 
 		self.completedEquipmentObjects = []
 		self.completedHashes = {}
+		self.completedTypes = {}
 		self.equipmentObjects = []
 		self.spriteCountPerSheet = {}
 
 
 	def load_XML_Sources(self, INPUT_XML, FINISHED_SPRITES):
 		self.equipmentObjects, spriteCountPerSheet = spriteSheetReader(INPUT_XML)
-		self.completedEquipmentObjects = spriteSheetReader(FINISHED_SPRITES)
+		self.completedEquipmentObjects, _ = spriteSheetReader(FINISHED_SPRITES, ignore_labels=True)
 
+		# will store the hashed image data for completed sprites
 		self.completedHashes = {
-			e["imageHash"]: e for e in self.completedEquipmentObjects
+			e["ImageHash"]: e for e in self.completedEquipmentObjects
 		}
 
+		# this will store the "type" for each equipment item which has been completed
+		self.completedTypes = {
+			e["Type"] for e in self.completedEquipmentObjects
+		}
+		if self.completedEquipmentObjects:
+			print(type(self.completedEquipmentObjects[0]), self.completedEquipmentObjects[0])
 		return
 
 class InitialiseApp:
@@ -201,16 +210,17 @@ class InitialiseApp:
 		self.master = master
 		master.title("Sprite Renaming")
 		self.reviewSession = ReviewSession()
+		self.reviewSession.load_XML_Sources(INPUT_XML, FINISHED_SPRITES)
 
-		# self.equipImages = list(equipmentImageParsing(parsedSpritesRoot, renamedSpritesRoot))
+		self.equipImages = list(equipmentImageParsing(parsedSpritesRoot, renamedSpritesRoot))
 		self.index = 0
 		self.equipmentData = []
+		self.filteredEquipmentEntries = []
 		self.completedRenamesData = []
 		self.undoStack = []
 		self.redoStack = []
 		self.currentImage = None
 		self.currentXmlEntry = None
-
 
 		menu = tkinter.Menu(master)
 		editMenu = tkinter.Menu(menu, tearoff=0)
@@ -250,7 +260,7 @@ class InitialiseApp:
 		self.searchResults.pack(fill=tkinter.BOTH, expand=True)
 		self.searchResults.bind("<<ListboxSelect>>", self.onSearchSelect)
 
-		tkinter.Button(self.rightFrame, text="Next Image", command=self.nextImage).pack(pady=10)
+		tkinter.Button(self.rightFrame, text="Rename Sprite", command=self.renameSprite).pack(pady=10)
 
 	def undo(self):
 		return
@@ -275,10 +285,10 @@ class InitialiseApp:
 		self.searchResults.delete(0, tkinter.END)
 
 		if not query:
-			self.filteredEntries = []
+			self.filteredEquipmentEntries = []
 			return
 
-		self.filteredEntries = [
+		self.filteredEquipmentEntries = [
 			e for e in self.reviewSession.equipmentObjects
 			if self.fuzzyMatch(e, query)
 		]
@@ -295,7 +305,7 @@ class InitialiseApp:
 
 		self.folderStatus.configure(text=f"Search Results for {idx}")
 
-	def nextImage(self):
+	def renameSprite(self):
 		return
 
 	def selectImage(self, index):
