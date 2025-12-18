@@ -194,19 +194,23 @@ class ReviewSession:
 			e["imageHash"]: e for e in self.completedEquipmentObjects
 		}
 
+		return
 
 class InitialiseApp:
 	def __init__(self, master):
 		self.master = master
 		master.title("Sprite Renaming")
+		self.reviewSession = ReviewSession()
 
-		self.equipImages = list(equipmentImageParsing(parsedSpritesRoot, renamedSpritesRoot))
+		# self.equipImages = list(equipmentImageParsing(parsedSpritesRoot, renamedSpritesRoot))
 		self.index = 0
 		self.equipmentData = []
 		self.completedRenamesData = []
 		self.undoStack = []
 		self.redoStack = []
-		self.currentTask = None
+		self.currentImage = None
+		self.currentXmlEntry = None
+
 
 		menu = tkinter.Menu(master)
 		editMenu = tkinter.Menu(menu, tearoff=0)
@@ -220,8 +224,22 @@ class InitialiseApp:
 		self.rightFrame = tkinter.Frame(master)
 		self.rightFrame.pack(side="right", padx=10, pady=10)
 
-		self.imageLabel = tkinter.Label(self.leftFrame)
+		self.thumbnailsFrame = tkinter.Frame(self.leftFrame)
+		self.thumbnailsFrame.pack(side="left", padx=5)
+
+		self.previewFrame = tkinter.Frame(self.leftFrame)
+		self.previewFrame.pack(side="left", padx=10)
+
+		self.imageLabel = tkinter.Label(self.previewFrame)
 		self.imageLabel.pack()
+
+		self.folderStatus = tkinter.Label(
+			self.previewFrame,
+			wraplength=500,
+			justify="left",
+			anchor="w"
+		)
+		self.folderStatus.pack(pady=(8, 0), fill="x")
 
 		tkinter.Label(self.rightFrame, text="Fuzzy Search XML Data:", ).pack(pady=20)
 		self.searchBar = tkinter.Entry(self.rightFrame)
@@ -230,7 +248,7 @@ class InitialiseApp:
 
 		self.searchResults = tkinter.Listbox(self.rightFrame)
 		self.searchResults.pack(fill=tkinter.BOTH, expand=True)
-		self.searchResults.bind("<<ListboxSelect>>")
+		self.searchResults.bind("<<ListboxSelect>>", self.onSearchSelect)
 
 		tkinter.Button(self.rightFrame, text="Next Image", command=self.nextImage).pack(pady=10)
 
@@ -240,11 +258,57 @@ class InitialiseApp:
 	def redo(self):
 		return
 
+	def fuzzyMatch(self, entry, queryText):
+		queryText = queryText.lower()
+
+		haystack = " ".join([
+			str(entry.get("id", "")),
+			str(entry.get("display_id", "")),
+			str(entry.get("description", "")),
+			" ".join(entry.get("labels", []))
+		]).lower()
+
+		return queryText in haystack
+
 	def runSearch(self):
-		return
+		query = self.searchBar.get().strip()
+		self.searchResults.delete(0, tkinter.END)
+
+		if not query:
+			self.filteredEntries = []
+			return
+
+		self.filteredEntries = [
+			e for e in self.reviewSession.equipmentObjects
+			if self.fuzzyMatch(e, query)
+		]
+
+		for entry in self.filteredEntries:
+			self.searchResults.insert(tkinter.END, str(entry["id"]))
+
+	def onSearchSelect(self, event):
+		if not self.searchResults.curselection():
+			return
+
+		idx = self.searchResults.curselection()[0]
+		self.currentXmlEntry = self.filteredEntries[idx]
+
+		self.folderStatus.configure(text=f"Search Results for {idx}")
 
 	def nextImage(self):
 		return
+
+	def selectImage(self, index):
+		self.index = index
+		entry = self.equipImages[index]
+
+		image = imagePreview(entry["spriteImagePath"], size=(500,500))
+		self.imageLabel.configure(image=image)
+		self.imageLabel.image = image
+
+		self.folderStatus.config(text=entry["status"])
+
+		self.renderThumbnails()
 
 	def renderThumbnails(self):
 		for widget in self.leftFrame.winfo_children():
@@ -255,15 +319,18 @@ class InitialiseApp:
 				break
 
 			entry = self.equipImages[i]
-			image = imagePreview(entry["spritePath"], size=(500,500))
+			image = imagePreview(entry["spritePath"], size=(64,64))
 
-			label = tkinter.Label(self.rightFrame, image=image)
+			label = tkinter.Label(
+				self.thumbnailsFrame,
+				image=image,
+				cursor="hand2",
+				relief="solid" if i == self.index else "flat",
+				bd=2 if i == self.index else 0)
 			label.image = image
-			label.pack(side="left")
+			label.pack(anchor="w", pady=4)
 
-			label.bind("<Button-1>", lambda e=i: self.nextImage())
-
-
+			label.bind("<Button-1>", lambda e=i: self.selectImage(e))
 
 
 
