@@ -264,11 +264,13 @@ class InitialiseApp:
 		self.searchBar.pack(fill="x")
 		tkinter.Button(self.rightFrame, text="Search", command=self.runSearch).pack(pady=10)
 
-		self.searchResults = tkinter.Listbox(self.rightFrame)
+		self.searchResults = tkinter.Listbox(self.rightFrame, width=25)
 		self.searchResults.pack(fill=tkinter.BOTH, expand=True)
 		self.searchResults.bind("<<ListboxSelect>>", self.onSearchSelect)
+		self.runSearch()
 
 		tkinter.Button(self.rightFrame, text="Rename Sprite", command=self.renameSprite).pack(pady=10)
+
 
 	def undo(self):
 		return
@@ -280,10 +282,9 @@ class InitialiseApp:
 		queryText = queryText.lower()
 
 		haystack = " ".join([
-			str(entry.get("id", "")),
-			str(entry.get("display_id", "")),
-			str(entry.get("description", "")),
-			" ".join(entry.get("labels", []))
+			str(entry.get("Id", "")),
+			str(entry.get("DisplayId", "")),
+			str(entry.get("Description", ""))
 		]).lower()
 
 		return queryText in haystack
@@ -292,8 +293,10 @@ class InitialiseApp:
 		query = self.searchBar.get().strip().lower()
 		self.searchResults.delete(0, tkinter.END)
 
+		data = self.incompleteEquipmentData
+
 		if not query:
-			self.filteredEquipmentEntries = self.incompleteEquipmentData[:]
+			self.filteredEquipmentEntries = data[:]
 		else:
 			self.filteredEquipmentEntries = [
 				e for e in self.reviewSession.equipmentObjects
@@ -310,29 +313,23 @@ class InitialiseApp:
 		idx = self.searchResults.curselection()[0]
 		self.currentXmlEntry = self.filteredEquipmentEntries[idx]
 
-		self.folderStatus.configure(text=f"Search Results for {idx}")
 
 	def renameSprite(self):
 		return
 
-	def loadImage(self, index):
-		entry = self.incompleteEquipImages[index]
+	def loadImage(self, entry):
 		image = imagePreview(entry["spritePath"], size=(500, 500))
-
-		self.imageLabel.configure(image=image)
+		self.imageLabel.configure(image=image, background="#39FF14")
 		self.imageLabel.image = image
-
 		self.folderStatus.config(text=f"{entry["status"]}")
-
-		self.index = index
 		self.currentImage = entry["spritePath"]
 
 
 
 	def selectImage(self, index):
+		self.currentImage = self.incompleteEquipImages[index]
 		self.index = index
-		self.loadImage(index)
-		self.renderThumbnails()
+		self.loadImage(self.currentImage)
 
 	def renderThumbnails(self):
 		for widget in self.thumbnailsFrame.winfo_children():
