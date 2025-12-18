@@ -201,9 +201,7 @@ class ReviewSession:
 		self.completedTypes = {
 			e["Type"] for e in self.completedEquipmentObjects
 		}
-		if self.completedEquipmentObjects:
-			print(type(self.completedEquipmentObjects[0]), self.completedEquipmentObjects[0])
-		return
+
 
 class InitialiseApp:
 	def __init__(self, master):
@@ -212,9 +210,17 @@ class InitialiseApp:
 		self.reviewSession = ReviewSession()
 		self.reviewSession.load_XML_Sources(INPUT_XML, FINISHED_SPRITES)
 
-		self.equipImages = list(equipmentImageParsing(parsedSpritesRoot, renamedSpritesRoot))
 		self.index = 0
-		self.equipmentData = []
+
+		self.equipImages = list(equipmentImageParsing(parsedSpritesRoot, renamedSpritesRoot))
+		self.incompleteEquipImages = [
+			e for e in self.equipImages
+			if e["imageHash"] not in self.reviewSession.completedHashes
+		]
+		self.incompleteEquipmentData = [
+			e for e in self.reviewSession.equipmentObjects
+			if e["Type"] not in self.reviewSession.completedTypes
+		]
 		self.filteredEquipmentEntries = []
 		self.completedRenamesData = []
 		self.undoStack = []
@@ -251,6 +257,8 @@ class InitialiseApp:
 		)
 		self.folderStatus.pack(pady=(8, 0), fill="x")
 
+		self.renderThumbnails()
+
 		tkinter.Label(self.rightFrame, text="Fuzzy Search XML Data:", ).pack(pady=20)
 		self.searchBar = tkinter.Entry(self.rightFrame)
 		self.searchBar.pack(fill="x")
@@ -281,55 +289,61 @@ class InitialiseApp:
 		return queryText in haystack
 
 	def runSearch(self):
-		query = self.searchBar.get().strip()
+		query = self.searchBar.get().strip().lower()
 		self.searchResults.delete(0, tkinter.END)
 
 		if not query:
-			self.filteredEquipmentEntries = []
-			return
+			self.filteredEquipmentEntries = self.incompleteEquipmentData[:]
+		else:
+			self.filteredEquipmentEntries = [
+				e for e in self.reviewSession.equipmentObjects
+				if self.fuzzyMatch(e, query)
+			]
 
-		self.filteredEquipmentEntries = [
-			e for e in self.reviewSession.equipmentObjects
-			if self.fuzzyMatch(e, query)
-		]
-
-		for entry in self.filteredEntries:
-			self.searchResults.insert(tkinter.END, str(entry["id"]))
+		for entry in self.filteredEquipmentEntries:
+			self.searchResults.insert(tkinter.END, str(entry["Id"]))
 
 	def onSearchSelect(self, event):
 		if not self.searchResults.curselection():
 			return
 
 		idx = self.searchResults.curselection()[0]
-		self.currentXmlEntry = self.filteredEntries[idx]
+		self.currentXmlEntry = self.filteredEquipmentEntries[idx]
 
 		self.folderStatus.configure(text=f"Search Results for {idx}")
 
 	def renameSprite(self):
 		return
 
-	def selectImage(self, index):
-		self.index = index
-		entry = self.equipImages[index]
+	def loadImage(self, index):
+		entry = self.incompleteEquipImages[index]
+		image = imagePreview(entry["spritePath"], size=(500, 500))
 
-		image = imagePreview(entry["spriteImagePath"], size=(500,500))
 		self.imageLabel.configure(image=image)
 		self.imageLabel.image = image
 
-		self.folderStatus.config(text=entry["status"])
+		self.folderStatus.config(text=f"{entry["status"]}")
 
+		self.index = index
+		self.currentImage = entry["spritePath"]
+
+
+
+	def selectImage(self, index):
+		self.index = index
+		self.loadImage(index)
 		self.renderThumbnails()
 
 	def renderThumbnails(self):
-		for widget in self.leftFrame.winfo_children():
+		for widget in self.thumbnailsFrame.winfo_children():
 			widget.destroy()
 
 		for i in range(self.index, self.index + 7):
-			if i >= len(self.equipImages):
+			if i >= len(self.incompleteEquipImages):
 				break
 
-			entry = self.equipImages[i]
-			image = imagePreview(entry["spritePath"], size=(64,64))
+			entry = self.incompleteEquipImages[i]
+			image = imagePreview(entry["spritePath"], size=(64, 64))
 
 			label = tkinter.Label(
 				self.thumbnailsFrame,
@@ -340,7 +354,7 @@ class InitialiseApp:
 			label.image = image
 			label.pack(anchor="w", pady=4)
 
-			label.bind("<Button-1>", lambda e=i: self.selectImage(e))
+			label.bind("<Button-1>", lambda event, idx=i: self.selectImage(idx))
 
 
 
