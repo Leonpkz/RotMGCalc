@@ -91,26 +91,22 @@ def spriteSheetReader(input_xml, ignore_labels=False):
 	return results, file_count
 
 
-"""	
-	for r in results:
-		print(f"ID: {r['id']}")
-		print(f"Type: {r['type']}")
-		print(f"File: {r['file']}")
-		print(f"Display ID: {r['display_id']}")
-		print(f"Description: {r['description']}")
-		print(f"Labels: {', '.join(r['labels'])}")
-		print("-" * 40)
-"""
-
-
 def saveCurrentProgress(equipment_data):
 	with open(FINISHED_SPRITES, "a+") as f:
 		return
 
 
 
-def spriteRenamer(sprite_source_path, sprite_target_path, target_name):
-	return
+def spriteRenamer(sprite_entry, xml_entry):
+	sourcePath = sprite_entry["spritePath"]
+	destFolder = sprite_entry["destinationRenamePath"]
+
+	targetName = xml_entry["Type"]
+	ext = os.path.splitext(sourcePath)[1]
+
+	destPath = os.path.join(destFolder, f"{targetName}{ext}")
+
+	shutil.copy2(sourcePath, destPath)
 
 
 def equipmentImageParsing(parsed_sprites_root, renamed_sprites_root):
@@ -226,6 +222,7 @@ class InitialiseApp:
 		self.undoStack = []
 		self.redoStack = []
 		self.currentImage = None
+		self.currentSelectedImage = None
 		self.currentXmlEntry = None
 
 		# for the scroll wheel thumbnails, to make it more performant
@@ -342,7 +339,15 @@ class InitialiseApp:
 
 
 	def renameSprite(self):
-		spriteRenamer(self.currentImage, self.currentXmlEntry, self)
+		if not self.currentImage:
+			tkinter.messagebox.showerror("Error", "No image selected")
+			return
+
+		if not self.currentXmlEntry:
+			tkinter.messagebox.showerror("Error", "No xml entry selected")
+
+		spriteRenamer(sprite_entry=self.currentImage,
+		              xml_entry=self.currentXmlEntry)
 
 
 
@@ -351,7 +356,8 @@ class InitialiseApp:
 		self.imageLabel.configure(image=image, background="#39FF14")
 		self.imageLabel.image = image
 		self.folderStatus.config(text=f"{entry["status"]}")
-		self.currentImage = entry["spritePath"]
+		self.currentImage = entry
+		self.currentSelectedImage = entry["spritePath"]
 
 
 	def selectImage(self, index):
