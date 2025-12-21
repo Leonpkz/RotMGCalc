@@ -228,6 +228,15 @@ class InitialiseApp:
 		self.currentImage = None
 		self.currentXmlEntry = None
 
+		# for the scroll wheel thumbnails, to make it more performant
+		self.THUMB_SIZE = 64
+		self.VISIBLE_ROWS = 12
+		self.BUFFER_ROWS = 4
+		self.TOTAL_ROWS = len(self.incompleteEquipImages)
+		self.FIRST_VISIBLE_INDEX = 0
+		self.THUMB_WIDGETS = []
+		self.THUMB_IMAGES_CACHE = {}
+
 		menu = tkinter.Menu(master)
 		editMenu = tkinter.Menu(menu, tearoff=0)
 		editMenu.add_command(label="Undo", command=self.undo)
@@ -235,13 +244,26 @@ class InitialiseApp:
 		menu.add_cascade(label="Edit", menu=editMenu)
 		master.config(menu=menu)
 
+
 		self.leftFrame = tkinter.Frame(master)
+		self.thumbCanvas = tkinter.Canvas(self.leftFrame, width=80)
+		self.thumbCanvas.pack(side="left", fill="y", expand=True)
+		self.thumbnailsFrame = tkinter.Frame(self.thumbCanvas)
+		self.thumbCanvas.create_window((0, 0), window=self.thumbnailsFrame, anchor="nw")
+		self.thumbCanvasScrollbar = tkinter.Scrollbar(self.leftFrame, orient="vertical", command=self.thumbCanvas.yview)
+		self.thumbCanvasScrollbar.pack(side="right", fill="y")
+		self.thumbCanvasScrollbar.config(command=self.onCanvasScroll)
+		self.thumbCanvas.configure(yscrollcommand=self.thumbCanvasScrollbar.set)
+		self.thumbnailsFrame.bind(
+			"<Configure>",
+			lambda e: self.thumbCanvas.configure(
+				scrollregion=self.thumbCanvas.bbox("all")
+			)
+		)
+
 		self.leftFrame.pack(side="left", padx=10, pady=10)
 		self.rightFrame = tkinter.Frame(master)
 		self.rightFrame.pack(side="right", padx=10, pady=10)
-
-		self.thumbnailsFrame = tkinter.Frame(self.leftFrame)
-		self.thumbnailsFrame.pack(side="left", padx=5)
 
 		self.previewFrame = tkinter.Frame(self.leftFrame)
 		self.previewFrame.pack(side="left", padx=10)
@@ -257,8 +279,6 @@ class InitialiseApp:
 		)
 		self.folderStatus.pack(pady=(8, 0), fill="x")
 
-		self.renderThumbnails()
-
 		tkinter.Label(self.rightFrame, text="Fuzzy Search XML Data:", ).pack(pady=20)
 		self.searchBar = tkinter.Entry(self.rightFrame)
 		self.searchBar.pack(fill="x")
@@ -271,12 +291,17 @@ class InitialiseApp:
 
 		tkinter.Button(self.rightFrame, text="Rename Sprite", command=self.renameSprite).pack(pady=10)
 
+		self.createThumbnailPool()
+		self.updateVisibleThumbnails()
+
 
 	def undo(self):
 		return
 
+
 	def redo(self):
 		return
+
 
 	def fuzzyMatch(self, entry, queryText):
 		queryText = queryText.lower()
@@ -288,6 +313,7 @@ class InitialiseApp:
 		]).lower()
 
 		return queryText in haystack
+
 
 	def runSearch(self):
 		query = self.searchBar.get().strip().lower()
@@ -306,6 +332,7 @@ class InitialiseApp:
 		for entry in self.filteredEquipmentEntries:
 			self.searchResults.insert(tkinter.END, str(entry["Id"]))
 
+
 	def onSearchSelect(self, event):
 		if not self.searchResults.curselection():
 			return
@@ -315,7 +342,9 @@ class InitialiseApp:
 
 
 	def renameSprite(self):
-		return
+		spriteRenamer(self.currentImage, self.currentXmlEntry, self)
+
+
 
 	def loadImage(self, entry):
 		image = imagePreview(entry["spritePath"], size=(500, 500))
@@ -325,34 +354,68 @@ class InitialiseApp:
 		self.currentImage = entry["spritePath"]
 
 
-
 	def selectImage(self, index):
 		self.currentImage = self.incompleteEquipImages[index]
 		self.index = index
 		self.loadImage(self.currentImage)
 
-	def renderThumbnails(self):
-		for widget in self.thumbnailsFrame.winfo_children():
-			widget.destroy()
 
-		for i in range(self.index, self.index + 7):
-			if i >= len(self.incompleteEquipImages):
-				break
-
-			entry = self.incompleteEquipImages[i]
-			image = imagePreview(entry["spritePath"], size=(64, 64))
-
-			label = tkinter.Label(
+	def createThumbnailPool(self):
+		for i in range(self.VISIBLE_ROWS + self.BUFFER_ROWS):
+			lbl = tkinter.Label(
 				self.thumbnailsFrame,
-				image=image,
-				cursor="hand2",
-				relief="solid" if i == self.index else "flat",
-				bd=2 if i == self.index else 0)
-			label.image = image
-			label.pack(anchor="w", pady=4)
+				cursor="hand2"
+			)
+			lbl.pack(anchor="w", pady=4)
+			lbl.bind("<Button-1>", lambda e, idx=i: self.onThumbnailClick(idx))
+			self.THUMB_WIDGETS.append(lbl)
 
-			label.bind("<Button-1>", lambda event, idx=i: self.selectImage(idx))
 
+	def getThumbnailImage(self, index):
+		if index in self.THUMB_IMAGES_CACHE:
+			return self.THUMB_IMAGES_CACHE[index]
+
+		entry = self.incompleteEquipImages[index]
+		img = imagePreview(entry["spritePath"], size=(64, 64))
+		self.THUMB_IMAGES_CACHE[index] = img
+		return img
+
+
+	def updateVisibleThumbnails(self):
+		start = max(0, self.FIRST_VISIBLE_INDEX - self.BUFFER_ROWS)
+		end = min(
+			self.TOTAL_ROWS,
+			start + self.VISIBLE_ROWS + self.BUFFER_ROWS
+		)
+
+		for widget_idx, data_idx in enumerate(range(start, end)):
+			widget = self.THUMB_WIDGETS[widget_idx]
+
+			img = self.getThumbnailImage(data_idx)
+			widget.configure(image=img)
+			widget.image = img
+
+			widget.config(
+				relief="solid" if data_idx == self.index else "flat",
+				bd=2 if data_idx == self.index else 0
+			)
+
+			widget.data_index = data_idx
+
+	def onCanvasScroll(self, *args):
+		self.thumbCanvas.yview(*args)
+
+		first, last = self.thumbCanvas.yview()
+		self.FIRST_VISIBLE_INDEX = int(first * self.TOTAL_ROWS)
+
+		self.updateVisibleThumbnails()
+
+
+	def onThumbnailClick(self, widget_index):
+		widget = self.THUMB_WIDGETS[widget_index]
+		data_index = widget.data_index
+
+		self.selectImage(data_index)
 
 
 if __name__ == '__main__':
