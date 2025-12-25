@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <Objects>
   <Object id="DUMMY_ID" type="DUMMY_TYPE">
     <Labels>DUMMY_LABEL</Labels>
@@ -7,4 +7,4 @@
     <File>DUMMY_FILE</File>
     <ImageHash>0000000000000000000000000000000000000000000000000000000000000000</ImageHash>
   </Object>
-</Objects>
+<Object Id="Demon Blade" Type="0xc01"><Labels>POWERTIER_B, XPBONUS, ORG_ABYSS, TAB_UT, WEAPON, SWORD, DEMON_BLADE, TRADEABLE, UT, EQUIPMENT</Labels><DisplayID /><Description>A swift and hungry blade that is never satisfied with just one kill.</Description><File>abyssOfDemonsObjects8x8</File><ImageHash>

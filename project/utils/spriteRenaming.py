@@ -3,10 +3,11 @@ import os
 import tkinter
 import shutil
 from os.path import abspath
+from xml.etree.ElementTree import tostring
 
 from PIL import Image, ImageTk
 
-from project.utils.unusedSpriteToBinary import computeHash, SKIP_ARCHIVE
+from unusedSpriteToBinary import computeHash, SKIP_ARCHIVE
 
 """
 This file is to be used on the unnamed images extracted from the sprite sheets to make manually renaming the 
@@ -91,9 +92,24 @@ def spriteSheetReader(input_xml, ignore_labels=False):
 	return results, file_count
 
 
-def saveCurrentProgress(equipment_data):
-	with open(FINISHED_SPRITES, "a+") as f:
-		return
+def saveCurrentProgress(sprite_entry, xml_entry):
+    obj = ET.Element(
+        "Object",
+        {
+            "id": xml_entry["Id"],
+            "type": xml_entry["Type"]
+        }
+    )
+
+    ET.SubElement(obj, "Labels").text = ", ".join(xml_entry["Labels"])
+    ET.SubElement(obj, "DisplayId").text = xml_entry["DisplayId"]
+    ET.SubElement(obj, "Description").text = xml_entry["Description"]
+    ET.SubElement(obj, "File").text = xml_entry["File"]
+    ET.SubElement(obj, "ImageHash").text = tostring(sprite_entry["imageHash"])
+
+    root.append(obj)
+
+    tree.write(FINISHED_SPRITES, encoding="utf-8", xml_declaration=True)
 
 
 
@@ -106,7 +122,13 @@ def spriteRenamer(sprite_entry, xml_entry):
 
 	destPath = os.path.join(destFolder, f"{targetName}{ext}")
 
-	shutil.copy2(sourcePath, destPath)
+	try:
+		shutil.copy2(sourcePath, destPath)
+	except shutil.Error as error:
+		return error
+	finally:
+		saveCurrentProgress(sprite_entry, xml_entry)
+
 
 
 def equipmentImageParsing(parsed_sprites_root, renamed_sprites_root):
@@ -429,6 +451,13 @@ if __name__ == '__main__':
 
 	parsedSpritesRoot = os.listdir(PARSED_OUTPUT_SPRITES)
 	renamedSpritesRoot = os.listdir(BASE_RENAMED_SPRITES_DIR)
+
+	if os.path.exists(FINISHED_SPRITES):
+		tree = ET.parse(FINISHED_SPRITES)
+		root = tree.getroot()
+	else:
+		root = ET.Element("Objects")
+		tree = ET.ElementTree(root)
 
 	approot = tkinter.Tk()
 	initialiseApp = InitialiseApp(approot)
