@@ -62,7 +62,7 @@ def spriteSheetReader(input_xml, ignore_labels=False):
 		description = obj.findtext("Description")
 		file = obj.findtext(".//Texture/File") or obj.findtext("File")
 		# used for caching images of the sprites, so that they can be skipped in future runs
-		imageHash = obj.findtext(".//Texture/ImageHash")
+		imageHash = obj.findtext("ImageHash")
 
 		# skip entries missing labels or file
 		if not labels or not file:
@@ -102,10 +102,10 @@ def saveCurrentProgress(sprite_entry, xml_entry):
     )
 
     ET.SubElement(obj, "Labels").text = ", ".join(xml_entry["Labels"])
-    ET.SubElement(obj, "DisplayId").text = xml_entry["DisplayId"]
+    ET.SubElement(obj, "DisplayId").text = xml_entry["DisplayID"]
     ET.SubElement(obj, "Description").text = xml_entry["Description"]
     ET.SubElement(obj, "File").text = xml_entry["File"]
-    ET.SubElement(obj, "ImageHash").text = tostring(sprite_entry["imageHash"])
+    ET.SubElement(obj, "ImageHash").text = computeHash(sprite_entry["spritePath"])
 
     root.append(obj)
 
@@ -370,6 +370,13 @@ class InitialiseApp:
 
 		spriteRenamer(sprite_entry=self.currentImage,
 		              xml_entry=self.currentXmlEntry)
+		self.incompleteEquipImages.remove(self.currentImage)
+		self.incompleteEquipmentData.remove(self.currentXmlEntry)
+		self.currentImage = None
+		self.currentXmlEntry = None
+		self.imageLabel.configure(image=None)
+		self.folderStatus.config(text="")
+		self.updateVisibleThumbnails()
 
 
 
