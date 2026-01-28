@@ -30,7 +30,7 @@ def computeHash(imagePath):
 	# return encoded hash for a sprite
 	with open(imagePath, "rb") as imageFile:
 		imageBytes = imageFile.read()
-		return hashlib.sha256(imageBytes).digest()
+		return hashlib.sha256(imageBytes).hexdigest()
 
 
 def loadSkipBinary():

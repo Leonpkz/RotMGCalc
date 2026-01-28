@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <Objects>
   <Object id="DUMMY_ID" type="DUMMY_TYPE">
     <Labels>DUMMY_LABEL</Labels>
@@ -7,4 +7,29 @@
     <File>DUMMY_FILE</File>
     <ImageHash>0000000000000000000000000000000000000000000000000000000000000000</ImageHash>
   </Object>
-</Objects>
+  <Object id="Demon Blade" type="0xc01">
+    <Labels>POWERTIER_B, DEMON_BLADE, EQUIPMENT, XPBONUS, WEAPON, TAB_UT, UT, TRADEABLE, SWORD,
+      ORG_ABYSS</Labels>
+    <DisplayId />
+    <Description>A swift and hungry blade that is never satisfied with just one kill.</Description>
+    <File>abyssOfDemonsObjects8x8</File>
+    <ImageHash>74effb5ea577efeef53137c5341ab7a3bd9b01457c193d707c86932bff58c289</ImageHash>
+  </Object>
+  <Object id="Adamantine Helm" type="0x3a1b">
+    <Labels>ABILITY, HELM, EQUIPMENT, XPBONUS, MPCOST, TAB_UT, UT, ORG_ABYSS</Labels>
+    <DisplayId />
+    <Description>A masterpiece of craftsmanship, this full helm was forged in the fires of the
+      volcanic abyss infusing its metal with a regenerative ability.</Description>
+    <File>abyssOfDemonsObjects8x8</File>
+    <ImageHash>c362c42be9f01009d5920f2327229e91f7264198340841a583b9418be9c7d808</ImageHash>
+  </Object>
+  <Object id="Berserker's Breastplate" type="0x3a1c">
+    <Labels>BERSERKERBP, TAB_UT, ORG_ABYSS, HEAVY, TRADEABLE, ARMOR, POWERTIER_B, EQUIPMENT, UT,
+      XPBONUS</Labels>
+    <DisplayId />
+    <Description>This armor is donned by the Brutes of the Abyss, focusing narrowly on pure
+      offensive power with little reguard to the wellbeing of its wearer.</Description>
+    <File>abyssOfDemonsObjects8x8</File>
+    <ImageHash>963bbdebd8a9ff05cf6ebb9b4fe38279c5d33965dcd8d229445b6274e72a394b</ImageHash>
+  </Object>
+<Object id="Bloodbath Blade" type="0x5192"><Labels>UT, XPBONUS, WEAPON, KATANA, POWERTIER_S, REALMWHITE, EQUIPMENT, TAB_UT</Labels><DisplayId>Bloodbath Blade</DisplayId><Description>A malevolent katana infested with parasitic organisms. The ravenous symbiotes instills in its user a thirst for blood, which grows as it drinks from the life force of its wielder and their foes alike.</Description><File>ancientCityObjects8x8</File><ImageHash>dbe56ef2363a10aadfc9fe2db64a72a6c3708c1737b49c5d85f936658ccb713e</ImageHash></Object><Object id="Doom's Emblem" type="0x5199"><Labels>SEAL, UT, ABILITY, XPBONUS, REALMWHITE, TAB_UT, MPCOST, POWERTIER_S, EQUIPMENT</Labels><DisplayId>Doom's Emblem</DisplayId><Description>An accursed sigil that beckons to one's inner demons. Unholy paladins can unleash their dormant latent potential by forming a pact with an otherworldly force through a tribute of their own flesh and blood.</Description><File>ancientCityObjects8x8</File><ImageHash>46b780ab3f6ac844978c274e8877cfbd42142ef9cfd7549574f0be8d3fb8e570</ImageHash></Object></Objects>
