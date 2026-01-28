@@ -4,6 +4,7 @@ import tkinter
 import shutil
 from os.path import abspath
 
+from tkinter import messagebox
 from PIL import Image, ImageTk
 
 from project.utils.unusedSpriteToBinary import computeHash, SKIP_ARCHIVE
@@ -45,12 +46,12 @@ def spriteSheetReader(input_xml, ignore_labels=False):
 	Item count per sprite sheet as a dictionary (file_count)
 	"""
 	tree = ET.parse(input_xml)
-	root = tree.getroot()
+	ET_Root = tree.getroot()
 
 	results = []
 	file_count = {}
 
-	for obj in root.findall(".//Object"):
+	for obj in ET_Root.findall(".//Object"):
 		# get the required attributes to verify sprites, honestly its a lot but deca does not name things aptly
 
 		# the "or" is required so it reads my complete sprites xml
@@ -340,11 +341,11 @@ class InitialiseApp:
 
 	def renameSprite(self):
 		if not self.currentImage:
-			tkinter.messagebox.showerror("Error", "No image selected")
+			messagebox.showerror("Error", "No image selected")
 			return
 
 		if not self.currentXmlEntry:
-			tkinter.messagebox.showerror("Error", "No xml entry selected")
+			messagebox.showerror("Error", "No xml entry selected")
 
 		spriteRenamer(sprite_entry=self.currentImage,
 		              xml_entry=self.currentXmlEntry)
@@ -430,10 +431,10 @@ if __name__ == '__main__':
 	parsedSpritesRoot = os.listdir(PARSED_OUTPUT_SPRITES)
 	renamedSpritesRoot = os.listdir(BASE_RENAMED_SPRITES_DIR)
 
-	approot = tkinter.Tk()
-	initialiseApp = InitialiseApp(approot)
+	App_root = tkinter.Tk()
+	initialiseApp = InitialiseApp(App_root)
 
-approot.mainloop()
+App_root.mainloop()
 
 
 
