@@ -172,6 +172,44 @@ def imagePreview(path, size=(0, 0)):
 		raw_image = raw_image.resize(size, Image.NEAREST)
 	return ImageTk.PhotoImage(raw_image)
 
+
+class ThumbnailPanel:
+	def __init__(self, parent_frame, on_select_callback):
+		self.on_select = on_select_callback
+		self.frame = tkinter.Frame(parent_frame)
+		# create canvas, scrollbar, etc
+
+
+	def updateVisibleThumbnails(self):
+		return  # render logic
+
+
+	def _handle_click(self, index):
+		self.on_select(index)  # notify parent
+
+
+class PreviewPanel:
+	def __init__(self, parent_frame):
+		self.frame = tkinter.Frame(parent_frame)
+
+
+class SearchPanel:
+	def __init__(self, parent_frame, on_select_callback, on_rename_callback):
+		self.on_select = on_select_callback
+		self.on_rename = on_rename_callback
+		self.filtered_entries = []
+		self.frame = tkinter.Frame(parent_frame)
+
+		tkinter.Label(parent_frame, text="Fuzzy Search XML Data:", ).pack(pady=20)
+		self.searchBar = tkinter.Entry(parent_frame)
+		self.searchBar.pack(fill="x")
+		tkinter.Button(parent_frame, text="Search", command=self.runSearch).pack(pady=10)
+
+		self.searchResults = tkinter.Listbox(parent_frame, width=25)
+		self.searchResults.pack(fill=tkinter.BOTH, expand=True)
+		self.searchResults.bind("<<ListboxSelect>>", self.onSearchSelect)
+
+
 class ReviewSession:
 	def __init__(self):
 		self.spriteRenameComplete = None
@@ -183,7 +221,6 @@ class ReviewSession:
 		self.completedTypes = {}
 		self.equipmentObjects = []
 		self.spriteCountPerSheet = {}
-
 
 	def load_XML_Sources(self, INPUT_XML, FINISHED_SPRITES):
 		self.equipmentObjects, spriteCountPerSheet = spriteSheetReader(INPUT_XML)
@@ -198,6 +235,7 @@ class ReviewSession:
 		self.completedTypes = {
 			e["Type"] for e in self.completedEquipmentObjects
 		}
+
 
 
 class InitialiseApp:
@@ -277,20 +315,15 @@ class InitialiseApp:
 		)
 		self.folderStatus.pack(pady=(8, 0), fill="x")
 
-		tkinter.Label(self.rightFrame, text="Fuzzy Search XML Data:", ).pack(pady=20)
-		self.searchBar = tkinter.Entry(self.rightFrame)
-		self.searchBar.pack(fill="x")
-		tkinter.Button(self.rightFrame, text="Search", command=self.runSearch).pack(pady=10)
 
-		self.searchResults = tkinter.Listbox(self.rightFrame, width=25)
-		self.searchResults.pack(fill=tkinter.BOTH, expand=True)
-		self.searchResults.bind("<<ListboxSelect>>", self.onSearchSelect)
 		self.runSearch()
 
 		tkinter.Button(self.rightFrame, text="Rename Sprite", command=self.renameSprite).pack(pady=10)
 
 		self.createThumbnailPool()
 		self.updateVisibleThumbnails()
+
+
 
 
 	def undo(self):
