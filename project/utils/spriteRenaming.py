@@ -97,7 +97,6 @@ def saveCurrentProgress(equipment_data):
 		return
 
 
-
 def spriteRenamer(sprite_entry, xml_entry):
 	sourcePath = sprite_entry["spritePath"]
 	destFolder = sprite_entry["destinationRenamePath"]
@@ -122,7 +121,6 @@ def equipmentImageParsing(parsed_sprites_root, renamed_sprites_root):
 	The only guarantee is that hashing the 8x8 image will always yield the same hash so long as the sprite doesn't
 	change, this will make it very easy to pick up reskins, as well as using it to skip completed images
 	"""
-
 
 	# check if the destination directories exist, if not, create them
 	for originalFolder in parsedSpritesRoot:
@@ -174,119 +172,16 @@ def imagePreview(path, size=(0, 0)):
 
 
 class ThumbnailPanel:
-	def __init__(self, parent_frame, on_select_callback):
-		self.on_select = on_select_callback
+	def __init__(self, parent_frame, on_thumbnail_select, incomplete_equip_images):
+		self.on_select = on_thumbnail_select
+		self.incomplete_equip_images = incomplete_equip_images
+
 		self.frame = tkinter.Frame(parent_frame)
-		# create canvas, scrollbar, etc
-
-
-	def updateVisibleThumbnails(self):
-		return  # render logic
-
-
-	def _handle_click(self, index):
-		self.on_select(index)  # notify parent
-
-
-class PreviewPanel:
-	def __init__(self, parent_frame):
-		self.frame = tkinter.Frame(parent_frame)
-
-
-class SearchPanel:
-	def __init__(self, parent_frame, on_select_callback, on_rename_callback):
-		self.on_select = on_select_callback
-		self.on_rename = on_rename_callback
-		self.filtered_entries = []
-		self.frame = tkinter.Frame(parent_frame)
-
-		tkinter.Label(parent_frame, text="Fuzzy Search XML Data:", ).pack(pady=20)
-		self.searchBar = tkinter.Entry(parent_frame)
-		self.searchBar.pack(fill="x")
-		tkinter.Button(parent_frame, text="Search", command=self.runSearch).pack(pady=10)
-
-		self.searchResults = tkinter.Listbox(parent_frame, width=25)
-		self.searchResults.pack(fill=tkinter.BOTH, expand=True)
-		self.searchResults.bind("<<ListboxSelect>>", self.onSearchSelect)
-
-
-class ReviewSession:
-	def __init__(self):
-		self.spriteRenameComplete = None
-		self.currentImagePath = None
-		self.currentImageHash = None
-
-		self.completedEquipmentObjects = []
-		self.completedHashes = {}
-		self.completedTypes = {}
-		self.equipmentObjects = []
-		self.spriteCountPerSheet = {}
-
-	def load_XML_Sources(self, INPUT_XML, FINISHED_SPRITES):
-		self.equipmentObjects, spriteCountPerSheet = spriteSheetReader(INPUT_XML)
-		self.completedEquipmentObjects, _ = spriteSheetReader(FINISHED_SPRITES, ignore_labels=True)
-
-		# will store the hashed image data for completed sprites
-		self.completedHashes = {
-			e["ImageHash"]: e for e in self.completedEquipmentObjects
-		}
-
-		# this will store the "type" for each equipment item which has been completed
-		self.completedTypes = {
-			e["Type"] for e in self.completedEquipmentObjects
-		}
-
-
-
-class InitialiseApp:
-	def __init__(self, master):
-		self.master = master
-		master.title("Sprite Renaming")
-		self.reviewSession = ReviewSession()
-		self.reviewSession.load_XML_Sources(INPUT_XML, FINISHED_SPRITES)
-
-		self.index = 0
-
-		self.equipImages = list(equipmentImageParsing(parsedSpritesRoot, renamedSpritesRoot))
-		self.incompleteEquipImages = [
-			e for e in self.equipImages
-			if e["imageHash"] not in self.reviewSession.completedHashes
-		]
-		self.incompleteEquipmentData = [
-			e for e in self.reviewSession.equipmentObjects
-			if e["Type"] not in self.reviewSession.completedTypes
-		]
-		self.filteredEquipmentEntries = []
-		self.completedRenamesData = []
-		self.undoStack = []
-		self.redoStack = []
-		self.currentImage = None
-		self.currentSelectedImage = None
-		self.currentXmlEntry = None
-
-		# for the scroll wheel thumbnails, to make it more performant
-		self.THUMB_SIZE = 64
-		self.VISIBLE_ROWS = 12
-		self.BUFFER_ROWS = 4
-		self.TOTAL_ROWS = len(self.incompleteEquipImages)
-		self.FIRST_VISIBLE_INDEX = 0
-		self.THUMB_WIDGETS = []
-		self.THUMB_IMAGES_CACHE = {}
-
-		menu = tkinter.Menu(master)
-		editMenu = tkinter.Menu(menu, tearoff=0)
-		editMenu.add_command(label="Undo", command=self.undo)
-		editMenu.add_command(label="Redo", command=self.redo)
-		menu.add_cascade(label="Edit", menu=editMenu)
-		master.config(menu=menu)
-
-
-		self.leftFrame = tkinter.Frame(master)
-		self.thumbCanvas = tkinter.Canvas(self.leftFrame, width=80)
+		self.thumbCanvas = tkinter.Canvas(self.frame, width=80)
 		self.thumbCanvas.pack(side="left", fill="y", expand=True)
 		self.thumbnailsFrame = tkinter.Frame(self.thumbCanvas)
 		self.thumbCanvas.create_window((0, 0), window=self.thumbnailsFrame, anchor="nw")
-		self.thumbCanvasScrollbar = tkinter.Scrollbar(self.leftFrame, orient="vertical", command=self.thumbCanvas.yview)
+		self.thumbCanvasScrollbar = tkinter.Scrollbar(self.frame, orient="vertical", command=self.thumbCanvas.yview)
 		self.thumbCanvasScrollbar.pack(side="right", fill="y")
 		self.thumbCanvasScrollbar.config(command=self.onCanvasScroll)
 		self.thumbCanvas.configure(yscrollcommand=self.thumbCanvasScrollbar.set)
@@ -297,108 +192,27 @@ class InitialiseApp:
 			)
 		)
 
-		self.leftFrame.pack(side="left", padx=10, pady=10)
-		self.rightFrame = tkinter.Frame(master)
-		self.rightFrame.pack(side="right", padx=10, pady=10)
+		self.frame.pack(side="left", padx=10, pady=10)
 
-		self.previewFrame = tkinter.Frame(self.leftFrame)
-		self.previewFrame.pack(side="left", padx=10)
-
-		self.imageLabel = tkinter.Label(self.previewFrame)
-		self.imageLabel.pack()
-
-		self.folderStatus = tkinter.Label(
-			self.previewFrame,
-			wraplength=500,
-			justify="left",
-			anchor="w"
-		)
-		self.folderStatus.pack(pady=(8, 0), fill="x")
-
-
-		self.runSearch()
-
-		tkinter.Button(self.rightFrame, text="Rename Sprite", command=self.renameSprite).pack(pady=10)
+		# for the scroll wheel thumbnails, to make it more performant
+		self.THUMB_SIZE = 64
+		self.VISIBLE_ROWS = 12
+		self.BUFFER_ROWS = 4
+		self.TOTAL_ROWS = len(self.incomplete_equip_images)
+		self.FIRST_VISIBLE_INDEX = 0
+		self.THUMB_WIDGETS = []
+		self.THUMB_IMAGES_CACHE = {}
+		self.index = 0
 
 		self.createThumbnailPool()
 		self.updateVisibleThumbnails()
 
 
-
-
-	def undo(self):
-		return
-
-
-	def redo(self):
-		return
-
-
-	def fuzzyMatch(self, entry, queryText):
-		queryText = queryText.lower()
-
-		haystack = " ".join([
-			str(entry.get("Id", "")),
-			str(entry.get("DisplayId", "")),
-			str(entry.get("Description", ""))
-		]).lower()
-
-		return queryText in haystack
-
-
-	def runSearch(self):
-		query = self.searchBar.get().strip().lower()
-		self.searchResults.delete(0, tkinter.END)
-
-		data = self.incompleteEquipmentData
-
-		if not query:
-			self.filteredEquipmentEntries = data[:]
-		else:
-			self.filteredEquipmentEntries = [
-				e for e in self.reviewSession.equipmentObjects
-				if self.fuzzyMatch(e, query)
-			]
-
-		for entry in self.filteredEquipmentEntries:
-			self.searchResults.insert(tkinter.END, str(entry["Id"]))
-
-
-	def onSearchSelect(self, event):
-		if not self.searchResults.curselection():
-			return
-
-		idx = self.searchResults.curselection()[0]
-		self.currentXmlEntry = self.filteredEquipmentEntries[idx]
-
-
-	def renameSprite(self):
-		if not self.currentImage:
-			messagebox.showerror("Error", "No image selected")
-			return
-
-		if not self.currentXmlEntry:
-			messagebox.showerror("Error", "No xml entry selected")
-
-		spriteRenamer(sprite_entry=self.currentImage,
-		              xml_entry=self.currentXmlEntry)
-
-
-
-	def loadImage(self, entry):
-		image = imagePreview(entry["spritePath"], size=(500, 500))
-		self.imageLabel.configure(image=image, background="#39FF14")
-		self.imageLabel.image = image
-		self.folderStatus.config(text=f"{entry["status"]}")
-		self.currentImage = entry
-		self.currentSelectedImage = entry["spritePath"]
-
-
 	def selectImage(self, index):
-		self.currentImage = self.incompleteEquipImages[index]
+		currentImage = self.incomplete_equip_images[index]
 		self.index = index
-		self.loadImage(self.currentImage)
-
+		self.updateVisibleThumbnails()
+		self.on_select(currentImage)
 
 	def createThumbnailPool(self):
 		for i in range(self.VISIBLE_ROWS + self.BUFFER_ROWS):
@@ -410,16 +224,14 @@ class InitialiseApp:
 			lbl.bind("<Button-1>", lambda e, idx=i: self.onThumbnailClick(idx))
 			self.THUMB_WIDGETS.append(lbl)
 
-
 	def getThumbnailImage(self, index):
 		if index in self.THUMB_IMAGES_CACHE:
 			return self.THUMB_IMAGES_CACHE[index]
 
-		entry = self.incompleteEquipImages[index]
+		entry = self.incomplete_equip_images[index]
 		img = imagePreview(entry["spritePath"], size=(64, 64))
 		self.THUMB_IMAGES_CACHE[index] = img
 		return img
-
 
 	def updateVisibleThumbnails(self):
 		start = max(0, self.FIRST_VISIBLE_INDEX - self.BUFFER_ROWS)
@@ -450,12 +262,204 @@ class InitialiseApp:
 
 		self.updateVisibleThumbnails()
 
-
 	def onThumbnailClick(self, widget_index):
 		widget = self.THUMB_WIDGETS[widget_index]
 		data_index = widget.data_index
 
 		self.selectImage(data_index)
+
+
+class PreviewPanel:
+	def __init__(self, parent_frame):
+		self.previewFrame = tkinter.Frame(parent_frame)
+		self.previewFrame.pack(side="left", padx=10)
+
+		self.imageLabel = tkinter.Label(self.previewFrame)
+		self.imageLabel.pack()
+
+		self.folderStatus = tkinter.Label(
+			self.previewFrame,
+			wraplength=500,
+			justify="left",
+			anchor="w"
+		)
+		self.folderStatus.pack(pady=(8, 0), fill="x")
+
+
+	def loadImage(self, entry):
+		image = imagePreview(entry["spritePath"], size=(500, 500))
+		self.imageLabel.configure(image=image, background="#39FF14")
+		self.imageLabel.image = image
+		self.folderStatus.config(text=entry["status"])
+
+
+class SearchPanel:
+	def __init__(self, parent_frame, on_select_callback, on_rename_callback):
+		"""
+        parent_frame: the tkinter frame to put widgets in
+        on_select_callback: function to call when user selects an item (receives xml_entry)
+        on_rename_callback: function to call when rename button clicked
+		"""
+		self.equipment_data = None
+		self.on_select = on_select_callback
+		self.on_rename = on_rename_callback
+		self.filtered_entries = []
+
+
+		tkinter.Label(parent_frame, text="Fuzzy Search XML Data:", ).pack(pady=20)
+		self.searchBar = tkinter.Entry(parent_frame)
+		self.searchBar.pack(fill="x")
+		tkinter.Button(parent_frame, text="Search", command=self.runSearch).pack(pady=10)
+
+		self.searchResults = tkinter.Listbox(parent_frame, width=25)
+		self.searchResults.pack(fill=tkinter.BOTH, expand=True)
+		self.searchResults.bind("<<ListboxSelect>>", self.onSearchSelect)
+
+		tkinter.Button(parent_frame, text="Rename Sprite", command=self.on_rename).pack(pady=10)
+
+	def setData(self, equipment_data):
+		"""call this to give panel data to use"""
+		self.equipment_data = equipment_data
+		self.runSearch()  # refresh
+
+	# noinspection PyMethodMayBeStatic
+	def fuzzyMatch(self, entry, queryText):
+		queryText = queryText.lower()
+
+		haystack = " ".join([
+			str(entry.get("Id", "")),
+			str(entry.get("DisplayId", "")),
+			str(entry.get("Description", ""))
+		]).lower()
+
+		return queryText in haystack
+
+	def runSearch(self):
+		query = self.searchBar.get().strip().lower()
+		self.searchResults.delete(0, tkinter.END)
+
+		if not query:
+			self.filtered_entries = self.equipment_data[:]
+		else:
+			self.filtered_entries = [
+				e for e in self.equipment_data
+				if self.fuzzyMatch(e, query)
+			]
+
+		for entry in self.filtered_entries:
+			self.searchResults.insert(tkinter.END, str(entry["Id"]))
+
+	def onSearchSelect(self, _):
+		if not self.searchResults.curselection():
+			return
+
+		idx = self.searchResults.curselection()[0]
+		selected_entry = self.filtered_entries[idx]
+		self.on_select(selected_entry)
+
+
+class ReviewSession:
+	def __init__(self):
+		self.spriteRenameComplete = None
+		self.currentImagePath = None
+		self.currentImageHash = None
+
+		self.completedEquipmentObjects = []
+		self.completedHashes = {}
+		self.completedTypes = {}
+		self.equipmentObjects = []
+		self.spriteCountPerSheet = {}
+
+	def load_XML_Sources(self, INPUT_XML, FINISHED_SPRITES):
+		self.equipmentObjects, spriteCountPerSheet = spriteSheetReader(INPUT_XML)
+		self.completedEquipmentObjects, _ = spriteSheetReader(FINISHED_SPRITES, ignore_labels=True)
+
+		# will store the hashed image data for completed sprites
+		self.completedHashes = {
+			e["ImageHash"]: e for e in self.completedEquipmentObjects
+		}
+
+		# this will store the "type" for each equipment item which has been completed
+		self.completedTypes = {
+			e["Type"] for e in self.completedEquipmentObjects
+		}
+
+
+class InitialiseApp:
+	def __init__(self, master):
+		self.master = master
+		master.title("Sprite Renaming")
+		self.reviewSession = ReviewSession()
+		self.reviewSession.load_XML_Sources(INPUT_XML, FINISHED_SPRITES)
+
+		self.equipImages = list(equipmentImageParsing(parsedSpritesRoot, renamedSpritesRoot))
+		self.incompleteEquipImages = [
+			e for e in self.equipImages
+			if e["imageHash"] not in self.reviewSession.completedHashes
+		]
+		self.incompleteEquipmentData = [
+			e for e in self.reviewSession.equipmentObjects
+			if e["Type"] not in self.reviewSession.completedTypes
+		]
+		self.filteredEquipmentEntries = []
+		self.completedRenamesData = []
+		self.undoStack = []
+		self.redoStack = []
+		self.currentImage = None
+		self.currentSelectedImage = None
+		self.currentXmlEntry = None
+
+		menu = tkinter.Menu(master)
+		editMenu = tkinter.Menu(menu, tearoff=0)
+		editMenu.add_command(label="Undo", command=self.undo)
+		editMenu.add_command(label="Redo", command=self.redo)
+		menu.add_cascade(label="Edit", menu=editMenu)
+		master.config(menu=menu)
+
+		self.leftFrame = tkinter.Frame(master)
+		self.leftFrame.pack(side="left", padx=10, pady=10)
+
+		self.rightFrame = tkinter.Frame(master)
+		self.rightFrame.pack(side="right", padx=10, pady=10)
+
+		self.searchPanel = SearchPanel(
+			parent_frame=self.rightFrame,
+			on_select_callback=self.onXmlEntrySelected,
+			on_rename_callback=self.renameSprite
+		)
+		self.thumbnailPanel = ThumbnailPanel(
+			parent_frame=self.leftFrame,
+			on_thumbnail_select=self.onImageSelected,
+			incomplete_equip_images=self.incompleteEquipImages
+		)
+		self.searchPanel.setData(self.incompleteEquipmentData)
+		self.previewPanel = PreviewPanel(parent_frame=self.leftFrame)
+
+
+	def undo(self):
+		return
+
+	def redo(self):
+		return
+
+	def onXmlEntrySelected(self, xmlEntry):
+		self.currentXmlEntry = xmlEntry
+
+	def onImageSelected(self, selectedImage):
+		self.currentImage = selectedImage
+		self.previewPanel.loadImage(selectedImage)
+
+	def renameSprite(self):
+		if not self.currentImage:
+			messagebox.showerror("Error", "No image selected")
+			return
+
+		if not self.currentXmlEntry:
+			messagebox.showerror("Error", "No xml entry selected")
+
+		spriteRenamer(sprite_entry=self.currentImage,
+		              xml_entry=self.currentXmlEntry)
+
 
 
 if __name__ == '__main__':
@@ -467,10 +471,4 @@ if __name__ == '__main__':
 	App_root = tkinter.Tk()
 	initialiseApp = InitialiseApp(App_root)
 
-App_root.mainloop()
-
-
-
-
-
-
+	App_root.mainloop()
