@@ -2,7 +2,6 @@ import xml.etree.ElementTree as ET
 import os
 import tkinter
 import shutil
-from os.path import abspath
 
 from tkinter import messagebox
 from PIL import Image, ImageTk
@@ -92,9 +91,24 @@ def spriteSheetReader(input_xml, ignore_labels=False):
 	return results, file_count
 
 
-def saveCurrentProgress(equipment_data):
-	with open(FINISHED_SPRITES, "a+") as f:
-		return
+def saveCurrentProgress(sprite_entry, xml_entry):
+	obj = ET.Element(
+		"Object",
+		{
+			"id": xml_entry["Id"],
+			"type": xml_entry["Type"]
+		}
+	)
+
+	ET.SubElement(obj, "Labels").text = ", ".join(xml_entry["Labels"])
+	ET.SubElement(obj, "DisplayId").text = xml_entry["DisplayID"]
+	ET.SubElement(obj, "Description").text = xml_entry["Description"]
+	ET.SubElement(obj, "File").text = xml_entry["File"]
+	ET.SubElement(obj, "ImageHash").text = computeHash(sprite_entry["spritePath"])
+
+	root.append(obj)
+
+	tree.write(FINISHED_SPRITES, encoding="utf-8", xml_declaration=True)
 
 
 def spriteRenamer(sprite_entry, xml_entry):
@@ -106,7 +120,12 @@ def spriteRenamer(sprite_entry, xml_entry):
 
 	destPath = os.path.join(destFolder, f"{targetName}{ext}")
 
-	shutil.copy2(sourcePath, destPath)
+	try:
+		shutil.copy2(sourcePath, destPath)
+	except shutil.Error as error:
+		return error
+	finally:
+		saveCurrentProgress(sprite_entry, xml_entry)
 
 
 def equipmentImageParsing(parsed_sprites_root, renamed_sprites_root):
@@ -296,9 +315,9 @@ class PreviewPanel:
 class SearchPanel:
 	def __init__(self, parent_frame, on_select_callback, on_rename_callback):
 		"""
-        parent_frame: the tkinter frame to put widgets in
-        on_select_callback: function to call when user selects an item (receives xml_entry)
-        on_rename_callback: function to call when rename button clicked
+		parent_frame: the tkinter frame to put widgets in
+		on_select_callback: function to call when user selects an item (receives xml_entry)
+		on_rename_callback: function to call when rename button clicked
 		"""
 		self.equipment_data = None
 		self.on_select = on_select_callback
@@ -401,7 +420,6 @@ class InitialiseApp:
 			e for e in self.reviewSession.equipmentObjects
 			if e["Type"] not in self.reviewSession.completedTypes
 		]
-		self.filteredEquipmentEntries = []
 		self.completedRenamesData = []
 		self.undoStack = []
 		self.redoStack = []
@@ -458,7 +476,7 @@ class InitialiseApp:
 			messagebox.showerror("Error", "No xml entry selected")
 
 		spriteRenamer(sprite_entry=self.currentImage,
-		              xml_entry=self.currentXmlEntry)
+					  xml_entry=self.currentXmlEntry)
 
 
 
@@ -467,6 +485,13 @@ if __name__ == '__main__':
 
 	parsedSpritesRoot = os.listdir(PARSED_OUTPUT_SPRITES)
 	renamedSpritesRoot = os.listdir(BASE_RENAMED_SPRITES_DIR)
+
+	if os.path.exists(FINISHED_SPRITES):
+		tree = ET.parse(FINISHED_SPRITES)
+		root = tree.getroot()
+	else:
+		root = ET.Element("Objects")
+		tree = ET.ElementTree(root)
 
 	App_root = tkinter.Tk()
 	initialiseApp = InitialiseApp(App_root)
