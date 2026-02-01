@@ -4,6 +4,7 @@ import tkinter
 import shutil
 
 from tkinter import messagebox
+from tkinter import font
 from PIL import Image, ImageTk
 
 from project.utils.unusedSpriteToBinary import computeHash, SKIP_ARCHIVE
@@ -141,23 +142,23 @@ def equipmentImageParsing(parsed_sprites_root, renamed_sprites_root):
 	change, this will make it very easy to pick up reskins, as well as using it to skip completed images
 	"""
 
+	parsedSpritesRoot = os.listdir(parsed_sprites_root)
+
 	# check if the destination directories exist, if not, create them
 	for originalFolder in parsedSpritesRoot:
-		dest_path = os.path.join(BASE_RENAMED_SPRITES_DIR, originalFolder)
+		dest_path = os.path.join(renamed_sprites_root, originalFolder)
 		if not os.path.exists(dest_path):
 			os.mkdir(dest_path)
 
 	# iterate through sprite folders
 
 	for spriteFolders in parsedSpritesRoot:
-		spriteFolderPath = os.path.join(PARSED_OUTPUT_SPRITES, spriteFolders)
+		spriteFolderPath = os.path.join(parsed_sprites_root, spriteFolders)
 		files = os.listdir(spriteFolderPath)
 		# files available on the disk
 		fileCount = len(files)
 		# expected file count, as per the equip.xml data
 		equipObjectsFileCount = spriteCountPerSheet[spriteFolders]
-		# information for the gui
-		fileStatus = None
 
 		if fileCount != equipObjectsFileCount:
 			fileStatus = (
@@ -167,7 +168,7 @@ def equipmentImageParsing(parsed_sprites_root, renamed_sprites_root):
 			fileStatus = f"Sprite count appears to be correct for directory {spriteFolders}"
 
 		# destination rename folder
-		renamedSpriteFolder = os.path.join(BASE_RENAMED_SPRITES_DIR, spriteFolders)
+		renamedSpriteFolder = os.path.join(renamed_sprites_root, spriteFolders)
 
 		for spriteImage in files:
 			spriteImagePath = os.path.join(spriteFolderPath, spriteImage)
@@ -196,7 +197,7 @@ class ThumbnailPanel:
 		self.incomplete_equip_images = incomplete_equip_images
 
 		self.frame = tkinter.Frame(parent_frame)
-		self.thumbCanvas = tkinter.Canvas(self.frame, width=80)
+		self.thumbCanvas = tkinter.Canvas(self.frame, width=80, height=600)
 		self.thumbCanvas.pack(side="left", fill="y", expand=True)
 		self.thumbnailsFrame = tkinter.Frame(self.thumbCanvas)
 		self.thumbCanvas.create_window((0, 0), window=self.thumbnailsFrame, anchor="nw")
@@ -215,8 +216,8 @@ class ThumbnailPanel:
 
 		# for the scroll wheel thumbnails, to make it more performant
 		self.THUMB_SIZE = 64
-		self.VISIBLE_ROWS = 12
-		self.BUFFER_ROWS = 4
+		self.VISIBLE_ROWS = 16
+		self.BUFFER_ROWS = 5
 		self.TOTAL_ROWS = len(self.incomplete_equip_images)
 		self.FIRST_VISIBLE_INDEX = 0
 		self.THUMB_WIDGETS = []
@@ -225,7 +226,6 @@ class ThumbnailPanel:
 
 		self.createThumbnailPool()
 		self.updateVisibleThumbnails()
-
 
 	def selectImage(self, index):
 		currentImage = self.incomplete_equip_images[index]
@@ -248,7 +248,7 @@ class ThumbnailPanel:
 			return self.THUMB_IMAGES_CACHE[index]
 
 		entry = self.incomplete_equip_images[index]
-		img = imagePreview(entry["spritePath"], size=(64, 64))
+		img = imagePreview(entry["spritePath"], size=(self.THUMB_SIZE, self.THUMB_SIZE))
 		self.THUMB_IMAGES_CACHE[index] = img
 		return img
 
@@ -287,6 +287,11 @@ class ThumbnailPanel:
 
 		self.selectImage(data_index)
 
+	def removeCurrentImage(self):
+		self.incomplete_equip_images[self.index] = None
+		self.TOTAL_ROWS -= 1
+		self.updateVisibleThumbnails()
+
 
 class PreviewPanel:
 	def __init__(self, parent_frame):
@@ -296,14 +301,16 @@ class PreviewPanel:
 		self.imageLabel = tkinter.Label(self.previewFrame)
 		self.imageLabel.pack()
 
+		self.font_size = font.Font(size=12, weight="bold")
+
 		self.folderStatus = tkinter.Label(
 			self.previewFrame,
 			wraplength=500,
 			justify="left",
-			anchor="w"
+			anchor="w",
+			font=self.font_size
 		)
 		self.folderStatus.pack(pady=(8, 0), fill="x")
-
 
 	def loadImage(self, entry):
 		image = imagePreview(entry["spritePath"], size=(500, 500))
@@ -323,14 +330,16 @@ class SearchPanel:
 		self.on_select = on_select_callback
 		self.on_rename = on_rename_callback
 		self.filtered_entries = []
-
+		self.font_size = font.Font(size=10)
 
 		tkinter.Label(parent_frame, text="Fuzzy Search XML Data:", ).pack(pady=20)
 		self.searchBar = tkinter.Entry(parent_frame)
 		self.searchBar.pack(fill="x")
 		tkinter.Button(parent_frame, text="Search", command=self.runSearch).pack(pady=10)
 
-		self.searchResults = tkinter.Listbox(parent_frame, width=25)
+		self.searchResults = tkinter.Listbox(parent_frame, width=25, height=15,
+		                                     selectmode=tkinter.SINGLE,
+		                                     font=self.font_size)
 		self.searchResults.pack(fill=tkinter.BOTH, expand=True)
 		self.searchResults.bind("<<ListboxSelect>>", self.onSearchSelect)
 
@@ -411,7 +420,7 @@ class InitialiseApp:
 		self.reviewSession = ReviewSession()
 		self.reviewSession.load_XML_Sources(INPUT_XML, FINISHED_SPRITES)
 
-		self.equipImages = list(equipmentImageParsing(parsedSpritesRoot, renamedSpritesRoot))
+		self.equipImages = list(equipmentImageParsing(PARSED_OUTPUT_SPRITES, BASE_RENAMED_SPRITES_DIR))
 		self.incompleteEquipImages = [
 			e for e in self.equipImages
 			if e["imageHash"] not in self.reviewSession.completedHashes
@@ -476,15 +485,12 @@ class InitialiseApp:
 			messagebox.showerror("Error", "No xml entry selected")
 
 		spriteRenamer(sprite_entry=self.currentImage,
-					  xml_entry=self.currentXmlEntry)
-
+		              xml_entry=self.currentXmlEntry)
+		self.thumbnailPanel.removeCurrentImage()
 
 
 if __name__ == '__main__':
 	equipObjects, spriteCountPerSheet = spriteSheetReader(INPUT_XML)
-
-	parsedSpritesRoot = os.listdir(PARSED_OUTPUT_SPRITES)
-	renamedSpritesRoot = os.listdir(BASE_RENAMED_SPRITES_DIR)
 
 	if os.path.exists(FINISHED_SPRITES):
 		tree = ET.parse(FINISHED_SPRITES)
@@ -494,6 +500,7 @@ if __name__ == '__main__':
 		tree = ET.ElementTree(root)
 
 	App_root = tkinter.Tk()
+	App_root.geometry("980x720")
 	initialiseApp = InitialiseApp(App_root)
 
 	App_root.mainloop()
