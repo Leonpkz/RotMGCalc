@@ -284,13 +284,14 @@ class ThumbnailPanel:
 	def onThumbnailClick(self, widget_index):
 		widget = self.THUMB_WIDGETS[widget_index]
 		data_index = widget.data_index
-
 		self.selectImage(data_index)
 
 	def removeCurrentImage(self):
-		self.incomplete_equip_images[self.index] = None
 		self.TOTAL_ROWS -= 1
 		self.updateVisibleThumbnails()
+
+	def getIndex(self):
+		return self.index
 
 
 class PreviewPanel:
@@ -317,6 +318,9 @@ class PreviewPanel:
 		self.imageLabel.configure(image=image, background="#39FF14")
 		self.imageLabel.image = image
 		self.folderStatus.config(text=entry["status"])
+
+	def removeCurrentImage(self):
+		self.imageLabel.image = None
 
 
 class SearchPanel:
@@ -463,6 +467,8 @@ class InitialiseApp:
 		self.previewPanel = PreviewPanel(parent_frame=self.leftFrame)
 
 
+
+
 	def undo(self):
 		return
 
@@ -474,6 +480,7 @@ class InitialiseApp:
 
 	def onImageSelected(self, selectedImage):
 		self.currentImage = selectedImage
+		print(self.currentImage)
 		self.previewPanel.loadImage(selectedImage)
 
 	def renameSprite(self):
@@ -486,7 +493,11 @@ class InitialiseApp:
 
 		spriteRenamer(sprite_entry=self.currentImage,
 		              xml_entry=self.currentXmlEntry)
+		imageIndex = self.thumbnailPanel.getIndex()
+		self.incompleteEquipImages.pop(imageIndex)
 		self.thumbnailPanel.removeCurrentImage()
+
+		self.previewPanel.removeCurrentImage()
 
 
 if __name__ == '__main__':
