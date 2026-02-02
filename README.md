@@ -16,7 +16,7 @@ confusion as to what is required and how to acquire this, on top of this the
 re-organisation and creation of directories for better future proofing
 - turning the images to not be used in my project (byproduct of extracting spritesheets from the game)
 into a bytes like object, then storing that in a binary file. see my unusedSpriteToBinary.py for more info
-- assigning the correct data to the images
+- assigning the correct data to the images <---- **We are currently here, although these steps arent ordered**
   - name change to the corresponding "type=" value on the XML
   - tool for managing the current and future assignment of these names changes, making future updates seamless 
   (or just less horrible, as this has to be manually done, to a degree, no matter what)
