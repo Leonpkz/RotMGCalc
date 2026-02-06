@@ -7,7 +7,7 @@ from tkinter import messagebox
 from tkinter import font
 from PIL import Image, ImageTk
 
-from project.utils.unusedSpriteToBinary import computeHash, SKIP_ARCHIVE
+from RotMGCalc.project.utils.unusedSpriteToBinary import computeHash, SKIP_ARCHIVE
 
 """
 This file is to be used on the unnamed images extracted from the sprite sheets to make manually renaming the 
@@ -129,7 +129,7 @@ def spriteRenamer(sprite_entry, xml_entry):
 		saveCurrentProgress(sprite_entry, xml_entry)
 
 
-def equipmentImageParsing(parsed_sprites_root, renamed_sprites_root):
+def equipmentImageParsing(parsed_sprites_root, renamed_sprites_root, sprite_count_per_sheet):
 	"""
 
 	This function yields image path data for the currently selected sprite in the gui.
@@ -142,6 +142,7 @@ def equipmentImageParsing(parsed_sprites_root, renamed_sprites_root):
 	change, this will make it very easy to pick up reskins, as well as using it to skip completed images
 	"""
 
+	spriteCountPerSheet = sprite_count_per_sheet
 	parsedSpritesRoot = os.listdir(parsed_sprites_root)
 
 	# check if the destination directories exist, if not, create them
@@ -288,6 +289,7 @@ class ThumbnailPanel:
 
 	def removeCurrentImage(self):
 		self.TOTAL_ROWS -= 1
+		self.incomplete_equip_images[self.index].destroy()
 		self.updateVisibleThumbnails()
 
 	def getIndex(self):
@@ -424,7 +426,8 @@ class InitialiseApp:
 		self.reviewSession = ReviewSession()
 		self.reviewSession.load_XML_Sources(INPUT_XML, FINISHED_SPRITES)
 
-		self.equipImages = list(equipmentImageParsing(PARSED_OUTPUT_SPRITES, BASE_RENAMED_SPRITES_DIR))
+		self.equipImages = list(equipmentImageParsing(PARSED_OUTPUT_SPRITES, BASE_RENAMED_SPRITES_DIR,
+		                                              self.reviewSession.spriteCountPerSheet))
 		self.incompleteEquipImages = [
 			e for e in self.equipImages
 			if e["imageHash"] not in self.reviewSession.completedHashes
@@ -434,7 +437,7 @@ class InitialiseApp:
 			if e["Type"] not in self.reviewSession.completedTypes
 		]
 		self.completedRenamesData = []
-		self.undoStack = []
+		self.undoStack = self.reviewSession.completedEquipmentObjects[:10:-1]
 		self.redoStack = []
 		self.currentImage = None
 		self.currentSelectedImage = None
@@ -501,8 +504,6 @@ class InitialiseApp:
 
 
 if __name__ == '__main__':
-	equipObjects, spriteCountPerSheet = spriteSheetReader(INPUT_XML)
-
 	if os.path.exists(FINISHED_SPRITES):
 		tree = ET.parse(FINISHED_SPRITES)
 		root = tree.getroot()
